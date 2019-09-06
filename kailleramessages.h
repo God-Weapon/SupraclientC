@@ -63,7 +63,7 @@ struct RECENT_SERVERS{
 };
 int const RECENT_MAX = 25;
 RECENT_SERVERS recentServers[RECENT_MAX];
-int recentCount = 0;
+int recentCount = -1;
 
 
 struct FAVORITE_SERVERS{
@@ -74,16 +74,16 @@ struct FAVORITE_SERVERS{
 };
 int const FAVORITE_MAX = 25;
 FAVORITE_SERVERS favoriteServers[FAVORITE_MAX];
-int favoriteCount = 0;
+int favoriteCount = -1;
 
 
 
 
-void p2pGameData(char *data, int dLen);
-void p2pGameChat(char *data, int dLen);
-void p2pGameStart(char *data, int dLen);
-void p2pGameDrop(char *data, int dLen);
-void p2pGameReady(char *data, int dLen);
+//void p2pGameData(char *data, int dLen);
+//void p2pGameChat(char *data, int dLen);
+//void p2pGameStart(char *data, int dLen);
+//void p2pGameDrop(char *data, int dLen);
+//void p2pGameReady(char *data, int dLen);
 
 
 
@@ -121,8 +121,8 @@ DWORD WINAPI recvLoop(LPVOID lpParam);
 DWORD WINAPI pingKailleraServers(LPVOID lpParam);
 DWORD WINAPI ping3DServers(LPVOID lpParam);
 DWORD WINAPI continuousLoop(LPVOID lpParam);
-DWORD WINAPI p2pLoop(LPVOID lpParam);
-HANDLE p2pThread;
+//DWORD WINAPI p2pLoop(LPVOID lpParam);
+//HANDLE p2pThread;
 int CALLBACK lstUserlistCompareFunc(LPARAM i1, LPARAM i2, LPARAM);
 int CALLBACK lstGamelistCompareFunc(LPARAM i1, LPARAM i2, LPARAM);
 int CALLBACK lstServerlistKCompareFunc(LPARAM i1, LPARAM i2, LPARAM);
@@ -138,8 +138,8 @@ long CALLBACK SubProcTxtMaxUsers(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 WNDPROC EditProcTxtMaxUsers;
 long CALLBACK SubProcTxtMaxPing(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 WNDPROC EditProcTxtMaxPing;
-long CALLBACK SubProcTxtREmulator(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-WNDPROC EditProcTxtREmulator;
+//long CALLBACK SubProcTxtREmulator(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+//WNDPROC EditProcTxtREmulator;
 long CALLBACK SubProcTxtChatroom(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 WNDPROC EditProcTxtChatroom;
 long CALLBACK SubProcTxtIP(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -169,8 +169,9 @@ DWORD const checkProperties = BS_AUTOCHECKBOX | BS_NOTIFY | WS_CHILD | WS_VISIBL
 HWND form1;
 HWND txtGame;
 HWND btnChatroom;
+HWND lblQuit;
 HWND txtQuit;
-HWND form2;
+//HWND form2;
 HWND tTab;
 HWND chkShowError;
 int errorValue;
@@ -181,17 +182,17 @@ HWND chkDrop;
 int dropValue;
 HWND chkBeep;
 HWND btnDrop;
-HWND btnP2PServer;
-HWND btnP2PConnect;
+//HWND btnP2PServer;
+//HWND btnP2PConnect;
 HWND chkJoinChatGame;
 HWND btnVersion;
-HWND txtP2PServer;
-HWND lblP2PServer;
-char p2pServer[1024];
-HWND txtP2PPort;
-HWND lblP2PPort;
-char p2pPort[1024];
-HWND btnP2PStart;
+//HWND txtP2PServer;
+//HWND lblP2PServer;
+//char p2pServer[1024];
+//HWND txtP2PPort;
+//HWND lblP2PPort;
+//char p2pPort[1024];
+//HWND btnP2PStart;
 HWND chkUseScreenChat;
 HWND chkKeepGameChatLogs;
 HWND chkKeepChatLogs;
@@ -216,11 +217,17 @@ int joinChatValue;
 int createValue;
 HWND serverListTab;
 HWND fLoginInfo;
+HWND lblUsername;
 HWND txtUsername;
 HWND chkEmulinkerSF;
 int emulinkerSFValue;
+HWND chkEmuRes;
+int emuResValue;
+HWND chkConnRes;
+int connResValue;
 HWND chkFakeP2P;
 int fakeP2PValue;
+HWND lblServerIP;
 HWND txtServerIP;
 HWND chkJoinDbl;
 int joinDblValue;
@@ -235,9 +242,9 @@ struct AWAY_MESSAGES{
 	int item;
 	bool save;
 };
-AWAY_MESSAGES awayMessages[100];
+AWAY_MESSAGES awayMessages[10];
 int awayMessageCount = 0;
-int const AWAY_MESSAGE_MAX = 100;
+int const AWAY_MESSAGE_MAX = 10;
 
 //Away
 HWND frmAway;
@@ -250,6 +257,7 @@ int useCacheValue;
 HWND chkBlink;
 int blinkValue;
 bool imOwner = false;
+bool loggedIn = false;
 void createAwayWindow();
 void updateAway();
 int awayValue;
@@ -257,6 +265,14 @@ HWND lstAway;
 void awayAdditem(char subject[], char message[], int value);
 void showAway();
 bool imAway = false;
+
+//PM
+void createPMWindow();
+HWND btnPM;
+HWND frmPM;
+HWND txtPM;
+char fPM[1024];
+bool cPM = false;
 
 //Comments
 void createCommentsWindow();
@@ -298,18 +314,20 @@ HWND txtMaxPing;
 HWND lblMaxPing;
 char maxUsersG[sizeof(int)];
 char maxPingG[sizeof(int)];
-char rEmulatorValue[sizeof(int)];
-HWND lblREmulator;
-HWND txtREmulator;
+//char rEmulatorValue[sizeof(int)];
+//HWND lblREmulator;
+//HWND txtREmulator;
+HWND txtMSG;
 HWND lblStats;
 HWND btnLogoff;
 HWND lstServerListK;
 HWND lstServerList3D;
 HWND btnKailleraServerList;
 HWND btnAnti3dServerList;
+HWND lblConnectionType;
 HWND cmbConnectionType;
 
-bool swap;
+bool swapp;
 HMENU awayMenu;
 HWND btnSave;
 HMENU gameMenu;
@@ -332,6 +350,7 @@ HMENU favoritelistMenu;
 HMENU favoritelistSubMenu;
 HMENU txtChatroomMenu;
 HMENU txtChatroomSubMenu;
+HMENU txtChatroomPmSubMenu;
 
 GETTEXTEX txtChatroomA;
 GETTEXTEX txtGameChatroomA;
@@ -341,7 +360,7 @@ int lstServerlist3DColumn = 0;
 int lstGamelistColumn = 4;
 int lstRecentlistColumn = 4;
 int lstFavoritelistColumn = 4;
-int lstWaitinglistColumn = 4;
+int lstWaitinglistColumn = 0;//4
 bool gameroom = false;
 
 HINSTANCE hInstance;
@@ -352,11 +371,11 @@ WSADATA startupInfo;
 int mySocket;
 int mySocketK;
 int mySocket3D;
-int p2pSocket;
+//int p2pSocket;
 int mySocketWaiting;
-sockaddr_in p2pServerInfo;
-int p2pClientLength;
-sockaddr_in p2pClientInfo;
+//sockaddr_in p2pServerInfo;
+//int p2pClientLength;
+//sockaddr_in p2pClientInfo;
 sockaddr_in socketInfo;
 sockaddr_in socketInfoK;
 sockaddr_in socketInfo3D;
@@ -380,7 +399,7 @@ struct USER_LIST_COMMANDS{
 };
 
 
-USER_LIST_COMMANDS userlistCommands[50];
+USER_LIST_COMMANDS userlistCommands[60];
 
 HANDLE gameThread;
 HANDLE recvLoopThread;
@@ -398,6 +417,7 @@ char myAddress[512];
 //Outbound Data
 char globalPacket[15000];
 unsigned short globalPacketSize;
+unsigned short normalPacketSize;
 
 char myBuffServerListK[10000];
 char myBuffServerList3D[10000];
@@ -466,7 +486,7 @@ GAMES tempGames[1000];
 int tempGameCount = 0;
 
 
-int count = 0;
+//int count = 0;
 
 struct Packets{
     char packet[6000];
@@ -486,10 +506,10 @@ char emulator[1024];
 char serverIP[1024] = "127.0.0.1:27888\0";
 unsigned long myPing;
 //################
-char myVersion[16] = "SCCPPE v0.87.9\0";
-char cVersion[25] = "SupraclientCPPE v0.87.9\0";
-char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.87.9  Sunday March 30, 2008\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
-char quit[1024] = "I'm using SupraclientCPPE v0.87.9\0";
+char myVersion[16] = "SCCPPE v0.89.0\0";
+char cVersion[25] = "SupraclientCPPE v0.89.0\0";
+char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.0  Friday September 6, 2019\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
+char quit[1024] = "I'm using SupraclientCPPE v0.89.0\0";
 //################
 bool chatroom;
 
@@ -511,7 +531,7 @@ unsigned short totalGames = 0;
 
 void showOptions(char show);
 
-char connectionType = 3;
+char connectionType = 1;//3
 unsigned short frameDelay;
 unsigned short myPlayerNumber;
 unsigned short totalPlayers;
@@ -519,7 +539,7 @@ unsigned short inputSize;
 int sizeOfEinput;
 bool startedGame = false;
 bool iQuit = false;
-char currentGame[128] = "Marvel Vs. Capcom: Clash of Super Heroes (US 980123)";
+char currentGame[128];// = "Marvel Vs. Capcom: Clash of Super Heroes (US 980123)";
 char gOwner[1024];
 char gEmulator[1024];
 char stage = 0;
@@ -579,4 +599,3 @@ void copyToClipboard(LPSTR lpCmdLine);
 
 
 bool hosting = false;
-void userLoginInformation1();
