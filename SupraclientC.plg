@@ -1,0 +1,109 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: SupraclientC - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\SUPRAF~1\LOCALS~1\Temp\RSP11AE.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SUPRACLIENTC_EXPORTS" /Fp"Debug/SupraclientC.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\SUPRAF~1\LOCALS~1\Temp\RSP11AE.tmp" 
+Creating temporary file "C:\DOCUME~1\SUPRAF~1\LOCALS~1\Temp\RSP11AF.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib comctl32.lib /nologo /dll /incremental:yes /pdb:"Debug/kailleraclient.pdb" /debug /machine:I386 /out:"Debug/kailleraclient.dll" /implib:"Debug/kailleraclient.lib" /pdbtype:sept 
+".\Debug\kailleraclient.obj"
+]
+Creating command line "link.exe @C:\DOCUME~1\SUPRAF~1\LOCALS~1\Temp\RSP11AF.tmp"
+<h3>Output Window</h3>
+Compiling...
+kailleraclient.cpp
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(342) : error C2065: 'MonitorFromPoint' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(342) : error C2065: 'MONITOR_DEFAULTTONULL' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(938) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(998) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1056) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1095) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1130) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1165) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1219) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1260) : warning C4805: '==' : unsafe mix of type 'int' and type 'const bool' in operation
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(1717) : error C2065: 'ListView_SortItemsEx' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3590) : error C2065: 'EM_SHOWSCROLLBAR' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3592) : warning C4244: 'initializing' : conversion from 'long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3601) : warning C4244: 'initializing' : conversion from 'long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3861) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3871) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(3940) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(4032) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(4042) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(4660) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(4669) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(4678) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(5128) : warning C4244: '=' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(5254) : warning C4244: 'argument' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6378) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6378) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6379) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6379) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6983) : error C2065: 'SETTEXTEX' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6983) : error C2146: syntax error : missing ';' before identifier 'q'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(6983) : error C2065: 'q' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7003) : error C2228: left of '.codepage' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7004) : error C2228: left of '.flags' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7004) : error C2065: 'ST_SELECTION' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7005) : error C2065: 'EM_SETTEXTEX' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7204) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7204) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7205) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7205) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7206) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7206) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7207) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7207) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7282) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7282) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7283) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7283) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7360) : error C2065: 'FLASHWINFO' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7360) : error C2146: syntax error : missing ';' before identifier 'g'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7360) : error C2065: 'g' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7366) : error C2228: left of '.cbSize' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7367) : error C2228: left of '.hwnd' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7368) : error C2228: left of '.dwFlags' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7368) : error C2065: 'FLASHW_ALL' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7368) : error C2065: 'FLASHW_TIMERNOFG' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7369) : error C2228: left of '.uCount' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7370) : error C2228: left of '.dwTimeout' must have class/struct/union type
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7371) : error C2065: 'FlashWindowEx' : undeclared identifier
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7545) : warning C4244: '=' : conversion from 'unsigned long' to 'char', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7546) : warning C4244: '=' : conversion from 'unsigned long' to 'char', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7547) : warning C4244: '=' : conversion from 'unsigned long' to 'char', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7548) : warning C4244: '=' : conversion from 'unsigned long' to 'char', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7554) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7554) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7555) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7555) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7593) : warning C4018: '<' : signed/unsigned mismatch
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7721) : warning C4244: '=' : conversion from 'unsigned long' to 'unsigned short', possible loss of data
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7779) : warning C4018: '==' : signed/unsigned mismatch
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7817) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7817) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7818) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7818) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7819) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7819) : warning C4309: '=' : truncation of constant value
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7820) : warning C4305: '=' : truncation from 'const int' to 'char'
+C:\Documents and Settings\SupraFast\workspace\SupraclientC\kailleraclient.cpp(7820) : warning C4309: '=' : truncation of constant value
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+kailleraclient.dll - 22 error(s), 55 warning(s)
+</pre>
+</body>
+</html>
