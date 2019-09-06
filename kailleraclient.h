@@ -21,9 +21,9 @@
 #define KAILLERA_CLIENT_API_VERSION "0.8"
 
 #ifdef KAILLERA_DLL
-#define DLLEXP __declspec(dllexport) WINAPI
+#define DLLEXP __declspec(dllexport) int WINAPI
 #else
-#define DLLEXP __declspec(dllimport) WINAPI
+#define DLLEXP __declspec(dllimport) int WINAPI
 #endif
 
 #ifdef __cplusplus
@@ -47,17 +47,17 @@ extern "C" {
      Call this method to retrieve kailleraclient.dll's version
      - version must point to a char[16] buffer
   */
-  __declspec(dllexport) int WINAPI kailleraGetVersion(char *version);
+  DLLEXP kailleraGetVersion(char *version);
   /*
      kailleraInit:
      Call this method when your program starts
   */
-  __declspec(dllexport) void WINAPI kailleraInit();
+  DLLEXP kailleraInit();
   /*
      kailleraShutdown:
      Call this method when your program ends
   */
-  __declspec(dllexport) void WINAPI kailleraShutdown();
+  DLLEXP kailleraShutdown();
   /*
      kailleraSetInfos:
      Use this method for setting up various infos:
@@ -80,12 +80,12 @@ extern "C" {
        "More infos about this game..." in the game list context menu.
        Set it to NULL if you don't need/want this feature.
   */
-  __declspec(dllexport) void WINAPI kailleraSetInfos(kailleraInfos *infos);
+  DLLEXP kailleraSetInfos(kailleraInfos *infos);
   /*
      kailleraSelectServerDialog:
      Use this method for launching the Kaillera server dialog
   */
-  __declspec(dllexport) void WINAPI kailleraSelectServerDialog(HWND parent);
+  DLLEXP kailleraSelectServerDialog(HWND parent);
 
   /* 
      kailleraModifyPlayValues:
@@ -114,19 +114,19 @@ extern "C" {
 
      returns: length received or -1 on network error (player no more in the game)
   */
-  __declspec(dllexport) int WINAPI kailleraModifyPlayValues(void *values, int size);
+  DLLEXP kailleraModifyPlayValues(void *values, int size);
 
   /*
       kailleraChatSend
       Use this function to send a line of chat text during a game
   */
-  __declspec(dllexport) void WINAPI kailleraChatSend(char *text);
+  DLLEXP kailleraChatSend(char *text);
 
   /*
       kailleraEndGame:
       Your emulation thread must call this method when the user stops the emulation
   */
-  __declspec(dllexport) void WINAPI kailleraEndGame();
+  DLLEXP kailleraEndGame();
 
 #ifdef __cplusplus
 };
