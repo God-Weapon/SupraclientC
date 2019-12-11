@@ -138,8 +138,6 @@ long CALLBACK SubProcTxtMaxUsers(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 WNDPROC EditProcTxtMaxUsers;
 long CALLBACK SubProcTxtMaxPing(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 WNDPROC EditProcTxtMaxPing;
-//long CALLBACK SubProcTxtREmulator(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-//WNDPROC EditProcTxtREmulator;
 long CALLBACK SubProcTxtChatroom(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 WNDPROC EditProcTxtChatroom;
 long CALLBACK SubProcTxtIP(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -171,7 +169,6 @@ HWND txtGame;
 HWND btnChatroom;
 HWND lblQuit;
 HWND txtQuit;
-//HWND form2;
 HWND tTab;
 HWND chkShowError;
 int errorValue;
@@ -258,6 +255,7 @@ HWND chkBlink;
 int blinkValue;
 bool imOwner = false;
 bool loggedIn = false;
+bool connection = false;
 void createAwayWindow();
 void updateAway();
 int awayValue;
@@ -314,9 +312,6 @@ HWND txtMaxPing;
 HWND lblMaxPing;
 char maxUsersG[sizeof(int)];
 char maxPingG[sizeof(int)];
-//char rEmulatorValue[sizeof(int)];
-//HWND lblREmulator;
-//HWND txtREmulator;
 HWND txtMSG;
 HWND lblStats;
 HWND btnLogoff;
@@ -360,7 +355,7 @@ int lstServerlist3DColumn = 0;
 int lstGamelistColumn = 4;
 int lstRecentlistColumn = 4;
 int lstFavoritelistColumn = 4;
-int lstWaitinglistColumn = 0;//4
+int lstWaitinglistColumn = 0;
 bool gameroom = false;
 
 HINSTANCE hInstance;
@@ -486,7 +481,6 @@ GAMES tempGames[1000];
 int tempGameCount = 0;
 
 
-//int count = 0;
 
 struct Packets{
     char packet[6000];
@@ -502,14 +496,14 @@ int xPos = 0;
 int yPos = 0;
 char myServer[1024] = "Not in a Server\0";
 char username[1024] = "Please enter a username!\0";
-char emulator[1024];
+char emulator[128];
 char serverIP[1024] = "127.0.0.1:27888\0";
 unsigned long myPing;
 //################
-char myVersion[16] = "SCCPPE v0.89.0\0";
-char cVersion[25] = "SupraclientCPPE v0.89.0\0";
-char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.0  Friday September 6, 2019\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
-char quit[1024] = "I'm using SupraclientCPPE v0.89.0\0";
+char myVersion[16] = "SCCPPE v0.89.7\0";
+char cVersion[25] = "SupraclientCPPE v0.89.7\0";
+char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.7  Wednesday December 11, 2019\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
+char quit[1024] = "I'm using SupraclientCPPE v0.89.7\0";
 //################
 bool chatroom;
 
@@ -531,7 +525,7 @@ unsigned short totalGames = 0;
 
 void showOptions(char show);
 
-char connectionType = 1;//3
+char connectionType = 1;
 unsigned short frameDelay;
 unsigned short myPlayerNumber;
 unsigned short totalPlayers;
@@ -595,6 +589,8 @@ bool showChatroomFirst = true;
 bool waiting;
 void exitGameThread();
 void exitThreads();
+void exitPingKThread();
+void exitPing3DThread();
 void copyToClipboard(LPSTR lpCmdLine);
 
 

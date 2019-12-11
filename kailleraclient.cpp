@@ -1,6 +1,6 @@
 #define KAILLERA_DLL 
 #include "kailleraclient.h"
-#define _WIN32_WINNT 0x0502 
+#define _WIN32_WINNT 0x0500 
 #include <windows.h>
 #include <stdio.h>
 #include <fstream>
@@ -19,6 +19,7 @@ HWND mainHwnd;
 #define SC_SUPRARECPING 27891
 
 extern "C" { 
+
 	DLLEXP kailleraGetVersion(char *version){ 
 		return (int)strcpy(version, myVersion); 
 	} 
@@ -52,20 +53,13 @@ extern "C" {
 		dropValue = 1;
 		awayMessageCount = 0;
 		joinDblValue = 1;
-		emulinkerSFValue = 1;
+		emulinkerSFValue = 0;
 		fakeP2PValue = 0;
 		//wsprintf(p2pPort, "%i", 7159);
 		//strcpy(p2pServer, "127.0.0.1");
 
-		//strcpy(rEmulatorValue, "any");
-
 		//Open File
 		config.open("supraclient.ini", ios::in);
-
-		/*if(!config.good()){
-			MessageBox(form1, "Error occurred while loading supraclient.ini", "Error Loading!", NULL);
-			return 1;
-		}*/
 
 		if (config.good()) {
 			//Get Contents
@@ -131,8 +125,6 @@ extern "C" {
 				else if (strncmp(temp, "EmuSF_FakeP2P=0", 15) == 0)
 					fakeP2PValue = 0;
 				//EmulinkerSF REmulator
-				//else if(strncmp(temp, "EmuSF_Emulator=", 15) == 0)
-					//strcpy(rEmulatorValue, &temp[15]);
 				else if (strncmp(temp, "EmuSF_Emulator=1", 16) == 0)
 					emuResValue = 1;
 				else if (strncmp(temp, "EmuSF_Emulator=0", 16) == 0)
@@ -159,13 +151,11 @@ extern "C" {
 				else if (strncmp(temp, "Userlist_Column_Order=1", 23) == 0)
 					userlistSwitch = true;
 
-
+				//P2P
 				//else if(strncmp(temp, "P2P_Server=", 11) == 0)
 					//strcpy(p2pServer, &temp[11]);
 				//else if(strncmp(temp, "P2P_Port=", 9) == 0)
 					//strcpy(p2pPort, &temp[9]);
-
-
 
 				//chkUseCache
 				else if (strncmp(temp, "Cache=0", 7) == 0)
@@ -363,8 +353,8 @@ extern "C" {
 		ZeroMemory(myBuff, MESSAGE_LENGTH * MESSAGE_SIZE);
 		//Server Lists
 		//strcpy(anti3DServerList.host, "master.anti3d.com");
-		strcpy(anti3DServerList.link, "raw_server_list2.php");
-		anti3DServerList.port = 80;
+		//strcpy(anti3DServerList.link, "raw_server_list2.php");
+		//anti3DServerList.port = 80;
 
 		strcpy(kailleraServerList.host, "www.kaillera.com");
 		strcpy(kailleraServerList.link, "raw_server_list2.php?wg=1&version=0.9");
@@ -374,19 +364,18 @@ extern "C" {
     } 
 
     DLLEXP kailleraShutdown(){
-		exitThreads();
 		DestroyWindow(form1);
 		DestroyWindow(mainHwnd);
 		return 0; 
     } 
 
-    DLLEXP kailleraSetInfos(kailleraInfos *infos){
+    DLLEXP kailleraSetInfos(kailleraInfos *infosp){
 		long i;
 		short strSize;
 		int w = 0;
 		char temp[2048];
 		
-		kInfo = *infos;
+		kInfo = *infosp;
 
 		//Get Emulator Name
 		strcpy(emulator, kInfo.appName);
@@ -437,7 +426,6 @@ extern "C" {
 			if(i % 100 == 0)
 				DoEvents();
 		}
-
 
 		//Favorite List Menu
 		favoritelistMenu = CreatePopupMenu();
@@ -781,10 +769,7 @@ extern "C" {
 		MSG msg;//Used to get messages from the thread's message queue
 		WNDCLASSEX wcex; //Used to register window class information    
 		hInstance = (HINSTANCE)GetModuleHandle(NULL);
-		hDefaultFont = (HFONT) CreateFont(-11, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, "Microsoft Sans Serif");//GetStockObject(DEFAULT_GUI_FONT);
-//		LVCOLUMN LvCol;
-//		LVITEM LvItem;
-//		TCITEM v; 
+		hDefaultFont = (HFONT)CreateFont(-11, 0, 0, 0, FW_REGULAR, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, "Microsoft Sans Serif");//GetStockObject(DEFAULT_GUI_FONT);
 		mainHwnd = parent;
 		
 		wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -846,8 +831,6 @@ extern "C" {
 		return msg.wParam; //return exit code to the OS 
 	} 
 
- 
-//NEW
    DLLEXP kailleraModifyPlayValues(void *values, int size){ 
 		int i;
 		long w;
@@ -934,18 +917,11 @@ extern "C" {
 		return 0;
    } 
 
-
-	DLLEXP kailleraEndGame(){ 
-	  startedGame = false;
-	  sizeOfEinput = -1;
-	  gamePlaying = false;
-	  dropGameRequest();
-	  clientKeepAlive();
-	  EnableWindow(chkUseCache, TRUE);
-	  UpdateWindow(form1);
-	  //saveConfig();
-	  return 0; 
-   } 
+   DLLEXP kailleraEndGame() {
+	   dropGameRequest();
+	   exitGameThread();
+	   return 0;
+   }
 
    DLLEXP kailleraChatSend(char *text){
 	   char dataToBeSent[1024];
@@ -965,7 +941,7 @@ extern "C" {
       return 0; 
    } 
 
-}
+};
 
 
 //maxPing Subclass
@@ -1027,64 +1003,6 @@ long CALLBACK SubProcTxtMaxPing(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 	return TRUE;
 }
 
-
-//rEmulator Subclass
-/*long CALLBACK SubProcTxtREmulator(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
-	char data[1024];
-	int dLen;
-	static bool controlKey = false;
-
-	switch(message){
-		case WM_KEYDOWN:{
-			switch(LOWORD(wParam)){
-				case VK_RETURN:{
-					//Emulator
-					GetWindowText(txtREmulator, rEmulatorValue, GetWindowTextLength(txtREmulator) + 1);
-					if(myGameID != -1 && imOwner == true && emulinkerSFValue == BST_CHECKED){
-						if(strlen(rEmulatorValue) == 0){
-							strcpy(rEmulatorValue, "any");
-							SetWindowText(txtREmulator, "any");
-						}
-						data[0] = 'd';
-						strcpy(&data[1], "/setemu ");
-						strcat(data, rEmulatorValue);
-						dLen = strlen(data) + 1;
-						data[0] = '\0';
-						constructPacket(data, dLen, 0x08);
-					}
-					return 0;
-				}
-				case VK_CONTROL:{
-					controlKey = true;
-					return 0;
-				}
-				case 65:{
-					if(controlKey == true){
-						SendMessage(txtREmulator, EM_SETSEL, 0, -1);
-						SetFocus(txtREmulator);
-						return 0;
-					}
-				}
-			}
-		}
-		case WM_KEYUP:{
-			switch(LOWORD(wParam)){
-				case VK_CONTROL:{
-					controlKey = false;
-					return 0;
-				}
-			}
-		}
-		default:{
-			if(wParam == VK_RETURN)
-				return 0;
-			else if(wParam == VK_CONTROL)
-				return 0;
-			return CallWindowProc(EditProcTxtREmulator, hwnd, message, wParam, lParam);
-		}
-	}
-	return TRUE;
-}*/
 
 //maxUsers Subclass
 long CALLBACK SubProcTxtMaxUsers(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
@@ -1361,7 +1279,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 	char location[1024];
 	char comments[1024];
 	int i;
-//	static int o = 0;
 	int iSelect;
 	LVITEM b;
 	LVFINDINFO c;
@@ -1373,10 +1290,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 					if(hwndCtl == btnLogin){
 						if (loggedIn == true)
 							break;
-						//wsprintf(comments,"%i", o);
-						//SetWindowText(txtUsername, comments);
+
 						loginToServer();
-						//o = o + 1;
 					
 						//Display
 						GetWindowText(txtServerIP, ip, 256);
@@ -1547,7 +1462,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 					}
 					else if(hwndCtl == chkFakeP2P){
 						fakeP2PValue = SendMessage(chkFakeP2P, BM_GETCHECK, 0, 0);
-						if(myGameID != -1/* && imOwner == true*/){
+						if(myGameID != -1 && imOwner == true){
 							temp[0] = 'd';
 							if(fakeP2PValue == BST_CHECKED)
 								strcpy(&temp[1], "/p2pon");
@@ -1601,9 +1516,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 						constructPacket(temp, i, 0x08);							
 					}
 					else if(hwndCtl == btnDrop){
-						sizeOfEinput = -1;
-						if (gamePlaying == true)
-							constructPacket("\0Game Ended Manually!", 22, 0x08);
+						dropGameRequest();
+						exitGameThread();
+						//if (gamePlaying == true)
+							//constructPacket("\0Game Ended Manually!", 22, 0x08);
 					}
 					else if(hwndCtl == btnCreateAway)
 						updateAway();
@@ -1617,11 +1533,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 						SendMessage(txtPM, WM_GETTEXT, 1024, (LPARAM) fPM);
 						DestroyWindow(frmPM);
 					}
-					else if(hwndCtl == btnChat){
+					else if(hwndCtl == btnChat)
 						globalChatRequest();
-						//GetWindowText(txtChat, currentGame, 128);
-						//createGameRequest();
-					}
 					else if(hwndCtl == btnGameChat)
 						gameChatRequest();
 					else if(hwndCtl == btnAway){
@@ -1649,7 +1562,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 						}
 					}
 					else if(hwndCtl == btnLogoff){
-						//exitThreads();
 						userQuitRequest();
 					}
 					else if(hwndCtl == btnJoin){
@@ -1678,8 +1590,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 
 						}
 					}
-					else if(hwndCtl == btnGameLeave)
+					else if (hwndCtl == btnGameLeave) {
+						exitGameThread();
 						quitGameRequest();
+					}
 					else if(hwndCtl == btnCreate){
 						if(swapp == false){
 							popupMenu(0);
@@ -1737,11 +1651,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 
 				if(i == 0){
 					showServerlistK();
-					//getServerList(kailleraServerList);
 				}
 				else if(i == 1){
 					showServerlist3D();
-					//getServerList(anti3dServerList);
 				}
 				else if(i == 2)
 					showRecentlist();
@@ -1953,12 +1865,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
                 // The user clicked on one of the columns.  Here we will save
                 // the index of the subitem that the column refers to.  Then
                 // call ListView_SortItemsEx() to sort the list items.
-				if(kailleraSwitch == false)
-					kailleraSwitch = true;
-				else
-					kailleraSwitch = false;
-                lstServerlistKColumn = pnmlv->iSubItem;
-                ListView_SortItemsEx(lstServerListK, lstServerlistKCompareFunc, 0);
+				if (!pingingK) {
+					if (kailleraSwitch == false)
+						kailleraSwitch = true;
+					else
+						kailleraSwitch = false;
+					lstServerlistKColumn = pnmlv->iSubItem;
+					ListView_SortItemsEx(lstServerListK, lstServerlistKCompareFunc, 0);
+				}
                 return 0;
             }
             else if((pnmh->hwndFrom == lstServerListK) && (pnmh->code == LVN_ITEMCHANGED)){
@@ -2025,12 +1939,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
                 // The user clicked on one of the columns.  Here we will save
                 // the index of the subitem that the column refers to.  Then
                 // call ListView_SortItemsEx() to sort the list items.
-				if(anti3DSwitch == false)
-					anti3DSwitch = true;
-				else
-					anti3DSwitch = false;
-                lstServerlist3DColumn = pnmlv->iSubItem;
-                ListView_SortItemsEx(lstServerList3D, lstServerlist3DCompareFunc, 0);
+				if (!pinging3D) {
+					if (anti3DSwitch == false)
+						anti3DSwitch = true;
+					else
+						anti3DSwitch = false;
+					lstServerlist3DColumn = pnmlv->iSubItem;
+					ListView_SortItemsEx(lstServerList3D, lstServerlist3DCompareFunc, 0);
+				}
                 return 0;
             }
             else if((pnmh->hwndFrom == lstServerList3D) && (pnmh->code == LVN_ITEMCHANGED)){
@@ -2361,7 +2277,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 			}
 			return 0;
 		}
-   }
+	}
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
 //*******************************************************************
@@ -2370,352 +2286,342 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 
 
 void createInitialWindow(){
-		LVCOLUMN LvCol;
-//		LVITEM LvItem;
-		TCITEM v; 
+	LVCOLUMN LvCol;
+	TCITEM v;
 
-		//Create Favoritelist
-		lstFavoriteList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
-		SendMessage(lstFavoriteList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	//Create Favoritelist
+	lstFavoriteList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
+	SendMessage(lstFavoriteList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
-		LvCol.pszText="IP Address\0";
-		LvCol.cx=150;
-		SendMessage(lstFavoriteList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="Server Name\0";
-		LvCol.cx=250;
-		SendMessage(lstFavoriteList,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Location\0";
-		LvCol.cx=140;
-		SendMessage(lstFavoriteList,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Comments\0";
-		LvCol.cx=205;
-		SendMessage(lstFavoriteList,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol);
-		SendMessage(lstFavoriteList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);		
-		//Create Waitinglist
-		lstWaitingList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
-		SendMessage(lstWaitingList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-		LvCol.pszText="Game Name\0";
-		LvCol.cx=250;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="Emulator\0";
-		LvCol.cx=125;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Username\0";
-		LvCol.cx=100;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Server Name\0";
-		LvCol.cx=100;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol);
-		LvCol.pszText="IP Address\0";
-		LvCol.cx=100;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,4,(LPARAM)&LvCol);
-		LvCol.pszText="Location\0";
-		LvCol.cx=100;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,5,(LPARAM)&LvCol);
-		LvCol.pszText="# of Players\0";
-		LvCol.cx=100;
-		SendMessage(lstWaitingList,LVM_INSERTCOLUMN,6,(LPARAM)&LvCol);
-		SendMessage(lstWaitingList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Create Recentlist
-		lstRecentList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
-		SendMessage(lstRecentList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-		LvCol.pszText="IP Address\0";
-		LvCol.cx=150;
-		SendMessage(lstRecentList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="Server Name\0";
-		LvCol.cx=350;
-		SendMessage(lstRecentList,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Location\0";
-		LvCol.cx=245;
-		SendMessage(lstRecentList,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		SendMessage(lstRecentList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Create Serverlist
-		lstServerListK = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
-		SendMessage(lstServerListK, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-		LvCol.pszText="Server Name\0";
-		LvCol.cx=250;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="IP Address\0";
-		LvCol.cx=125;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Ping\0";
-		LvCol.cx=75;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Location\0";
-		LvCol.cx=100;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol);
-		LvCol.pszText="Users\0";
-		LvCol.cx=65;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,4,(LPARAM)&LvCol);
-		LvCol.pszText="Games\0";
-		LvCol.cx=65;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,5,(LPARAM)&LvCol);
-		LvCol.pszText="Version\0";
-		LvCol.cx=65;
-		SendMessage(lstServerListK,LVM_INSERTCOLUMN,6,(LPARAM)&LvCol); 
-		SendMessage(lstServerListK, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Create Serverlist
-		lstServerList3D = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
-		SendMessage(lstServerList3D, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-		LvCol.pszText="Server Name\0";
-		LvCol.cx=250;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="IP Address\0";
-		LvCol.cx=125;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Ping\0";
-		LvCol.cx=75;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Location\0";
-		LvCol.cx=100;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol);
-		LvCol.pszText="Users\0";
-		LvCol.cx=65;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,4,(LPARAM)&LvCol);
-		LvCol.pszText="Games\0";
-		LvCol.cx=65;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,5,(LPARAM)&LvCol);
-		LvCol.pszText="Version\0";
-		LvCol.cx=65;
-		SendMessage(lstServerList3D,LVM_INSERTCOLUMN,6,(LPARAM)&LvCol); 
-		SendMessage(lstServerList3D, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Login Info Frame
-		tTab = CreateWindowEx(controlStyles, "SysTabControl32", NULL, tabProperties, 5, 478, 780, 85, form1, NULL, hInstance, NULL);
-		SendMessage(tTab, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		v.mask = TCIF_TEXT | TCIF_IMAGE; 
-		v.iImage = -1; 
-		v.pszText = "Login Info"; 
-		TabCtrl_InsertItem(tTab, 0, &v);
-		v.pszText = "Chatroom Options"; 
-		TabCtrl_InsertItem(tTab, 1, &v);
-		v.pszText = "Gameroom Options"; 
-		TabCtrl_InsertItem(tTab, 2, &v);
-		v.pszText = "Extended EmulinkerSF v0.85.0+ Gameroom Options"; 
-		TabCtrl_InsertItem(tTab, 3, &v);
-		//v.pszText = "P2P Options";
-		//TabCtrl_InsertItem(tTab, 4, &v);
-		//Login Servers
-		sTab = CreateWindowEx(controlStyles, "SysTabControl32", NULL, tabProperties, 5, 5, 780, 470, form1, NULL, hInstance, NULL);
-		SendMessage(sTab, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		v.mask = TCIF_TEXT | TCIF_IMAGE; 
-		v.iImage = -1; 
-		v.pszText = "Kaillera Server List"; 
-		TabCtrl_InsertItem(sTab, 0, &v);
-		v.pszText = "Anti3D Server List"; 
-		TabCtrl_InsertItem(sTab, 1, &v);
-		v.pszText = "Recent List"; 
-		TabCtrl_InsertItem(sTab, 2, &v);
-		v.pszText = "Favorites List"; 
-		TabCtrl_InsertItem(sTab, 3, &v);
-		v.pszText = "Waiting Games List"; 
-		TabCtrl_InsertItem(sTab, 4, &v);
-		//fLoginInfo = CreateWindowEx(controlStyles, "BUTTON", "Login Info", frameProperties, 5, 475, 780, 80, form1, NULL, hInstance, NULL);
-		//SendMessage(fLoginInfo, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		
-		
-		if(atoi(maxUsersG) < 1 || atoi(maxUsersG) > 100)
-			wsprintf(maxUsersG, "%i", 16);
-		txtMaxUsers = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", maxUsersG, textboxProperties, 10, 520, 60,25, form1, NULL, hInstance, NULL);
-		SendMessage(txtMaxUsers, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblMaxUsers = CreateWindowEx(controlStyles, "STATIC", "Max Users:", labelProperties, 10, 505, 60, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblMaxUsers, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		if(atoi(maxPingG) < 1 || atoi(maxPingG) > 1000)
-			wsprintf(maxPingG, "%i", 200);
-		txtMaxPing = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", maxPingG, textboxProperties, 75, 520, 60,25, form1, NULL, hInstance, NULL);
-		SendMessage(txtMaxPing, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblMaxPing = CreateWindowEx(controlStyles, "STATIC", "Max Ping:", labelProperties, 75, 505, 60, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblMaxPing, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Use EmulinkerSF Options
-		chkEmulinkerSF = CreateWindowEx(controlStyles,"BUTTON", "Use Extended Options?", checkProperties, 325, 535, 140, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkEmulinkerSF, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkEmulinkerSF, BM_SETCHECK, emulinkerSFValue, 0);
-		//Fake P2P Options
-		chkFakeP2P = CreateWindowEx(controlStyles,"BUTTON", "Use Fake P2P?", checkProperties, 325, 505, 100, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkFakeP2P, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkFakeP2P, BM_SETCHECK, fakeP2PValue, 0);
-		//Emulator Restriction
-		chkEmuRes = CreateWindowEx(controlStyles, "BUTTON", "Restrict Emulator?", checkProperties, 150, 505, 105, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkEmuRes, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkEmuRes, BM_SETCHECK, emuResValue, 0);
-		/*txtREmulator = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", rEmulatorValue, textboxProperties, 140, 520, 175, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtREmulator, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblREmulator = CreateWindowEx(controlStyles, "STATIC", "Allowed Emulator: ['any' is default]", labelProperties, 140, 505, 175, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblREmulator, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));*/
-		//Connection Restriction
-		chkConnRes = CreateWindowEx(controlStyles, "BUTTON", "Restrict Connection Type?", checkProperties, 150, 535, 145, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkConnRes, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkConnRes, BM_SETCHECK, connResValue, 0);
-		//Version
-		btnVersion = CreateWindowEx(controlStyles, "BUTTON", "Server Version", buttonProperties, 500, 530, 80, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnVersion, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	LvCol.pszText = "IP Address\0";
+	LvCol.cx = 150;
+	SendMessage(lstFavoriteList, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Server Name\0";
+	LvCol.cx = 250;
+	SendMessage(lstFavoriteList, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Location\0";
+	LvCol.cx = 140;
+	SendMessage(lstFavoriteList, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Comments\0";
+	LvCol.cx = 205;
+	SendMessage(lstFavoriteList, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	SendMessage(lstFavoriteList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Waitinglist
+	lstWaitingList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
+	SendMessage(lstWaitingList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "Game Name\0";
+	LvCol.cx = 250;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Emulator\0";
+	LvCol.cx = 125;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Username\0";
+	LvCol.cx = 100;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Server Name\0";
+	LvCol.cx = 100;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	LvCol.pszText = "IP Address\0";
+	LvCol.cx = 100;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 4, (LPARAM)&LvCol);
+	LvCol.pszText = "Location\0";
+	LvCol.cx = 100;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 5, (LPARAM)&LvCol);
+	LvCol.pszText = "# of Players\0";
+	LvCol.cx = 80;
+	SendMessage(lstWaitingList, LVM_INSERTCOLUMN, 6, (LPARAM)&LvCol);
+	SendMessage(lstWaitingList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Recentlist
+	lstRecentList = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
+	SendMessage(lstRecentList, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "IP Address\0";
+	LvCol.cx = 150;
+	SendMessage(lstRecentList, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Server Name\0";
+	LvCol.cx = 350;
+	SendMessage(lstRecentList, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Location\0";
+	LvCol.cx = 245;
+	SendMessage(lstRecentList, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	SendMessage(lstRecentList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Serverlist
+	lstServerListK = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
+	SendMessage(lstServerListK, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "Server Name\0";
+	LvCol.cx = 250;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "IP Address\0";
+	LvCol.cx = 125;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Ping\0";
+	LvCol.cx = 75;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Location\0";
+	LvCol.cx = 100;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	LvCol.pszText = "Users\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 4, (LPARAM)&LvCol);
+	LvCol.pszText = "Games\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 5, (LPARAM)&LvCol);
+	LvCol.pszText = "Version\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerListK, LVM_INSERTCOLUMN, 6, (LPARAM)&LvCol);
+	SendMessage(lstServerListK, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Serverlist
+	lstServerList3D = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 10, 30, 770, 440, form1, NULL, hInstance, NULL);
+	SendMessage(lstServerList3D, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "Server Name\0";
+	LvCol.cx = 250;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "IP Address\0";
+	LvCol.cx = 125;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Ping\0";
+	LvCol.cx = 75;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Location\0";
+	LvCol.cx = 100;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	LvCol.pszText = "Users\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 4, (LPARAM)&LvCol);
+	LvCol.pszText = "Games\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 5, (LPARAM)&LvCol);
+	LvCol.pszText = "Version\0";
+	LvCol.cx = 65;
+	SendMessage(lstServerList3D, LVM_INSERTCOLUMN, 6, (LPARAM)&LvCol);
+	SendMessage(lstServerList3D, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Login Info Frame
+	tTab = CreateWindowEx(controlStyles, "SysTabControl32", NULL, tabProperties, 5, 478, 780, 85, form1, NULL, hInstance, NULL);
+	SendMessage(tTab, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	v.mask = TCIF_TEXT | TCIF_IMAGE;
+	v.iImage = -1;
+	v.pszText = "Login Info";
+	TabCtrl_InsertItem(tTab, 0, &v);
+	v.pszText = "Chatroom Options";
+	TabCtrl_InsertItem(tTab, 1, &v);
+	v.pszText = "Gameroom Options";
+	TabCtrl_InsertItem(tTab, 2, &v);
+	v.pszText = "Extended EmulinkerSF v0.90.0+ Gameroom Options";
+	TabCtrl_InsertItem(tTab, 3, &v);
+	//v.pszText = "P2P Options";
+	//TabCtrl_InsertItem(tTab, 4, &v);
+	//Login Servers
+	sTab = CreateWindowEx(controlStyles, "SysTabControl32", NULL, tabProperties, 5, 5, 780, 470, form1, NULL, hInstance, NULL);
+	SendMessage(sTab, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	v.mask = TCIF_TEXT | TCIF_IMAGE;
+	v.iImage = -1;
+	v.pszText = "Kaillera Server List";
+	TabCtrl_InsertItem(sTab, 0, &v);
+	v.pszText = "Anti3D Server List";
+	TabCtrl_InsertItem(sTab, 1, &v);
+	v.pszText = "Recent List";
+	TabCtrl_InsertItem(sTab, 2, &v);
+	v.pszText = "Favorites List";
+	TabCtrl_InsertItem(sTab, 3, &v);
+	v.pszText = "Waiting Games List";
+	TabCtrl_InsertItem(sTab, 4, &v);
 
 
-		//P2P
-		/*txtP2PServer = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", p2pServer, textboxProperties, 10, 520, 210,25, form1, NULL, hInstance, NULL);
-		SendMessage(txtP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblP2PServer = CreateWindowEx(controlStyles, "STATIC", "Server IP:", labelProperties, 10, 505, 210, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//P2P Port Textbox
-		txtP2PPort = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", p2pPort, textboxProperties, 225, 520, 60,25, form1, NULL, hInstance, NULL);
-		SendMessage(txtP2PPort, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblP2PPort = CreateWindowEx(controlStyles, "STATIC", "Port#:", labelProperties, 225, 505, 60, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblP2PPort, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Login Button
-		btnP2PStart = CreateWindowEx(controlStyles, "BUTTON", "Start", buttonProperties, 500, 530, 60,25, form1, NULL, hInstance, NULL);
-		SendMessage(btnP2PStart, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Connect
-		btnP2PConnect = CreateWindowEx(controlStyles, "BUTTON", "Connect to Server", buttonProperties,290, 520, 100, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnP2PConnect, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Server
-		btnP2PServer = CreateWindowEx(controlStyles, "BUTTON", "Start as Server", buttonProperties, 395, 520, 100, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));*/
+	if (atoi(maxUsersG) < 1 || atoi(maxUsersG) > 100)
+		wsprintf(maxUsersG, "%i", 16);
+	txtMaxUsers = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", maxUsersG, textboxProperties, 10, 520, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtMaxUsers, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblMaxUsers = CreateWindowEx(controlStyles, "STATIC", "Max Users:", labelProperties, 10, 505, 60, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblMaxUsers, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	if (atoi(maxPingG) < 1 || atoi(maxPingG) > 1000)
+		wsprintf(maxPingG, "%i", 200);
+	txtMaxPing = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", maxPingG, textboxProperties, 75, 520, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtMaxPing, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblMaxPing = CreateWindowEx(controlStyles, "STATIC", "Max Ping:", labelProperties, 75, 505, 60, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblMaxPing, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Use EmulinkerSF Options
+	chkEmulinkerSF = CreateWindowEx(controlStyles, "BUTTON", "Use Extended Options?", checkProperties, 325, 535, 140, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkEmulinkerSF, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkEmulinkerSF, BM_SETCHECK, emulinkerSFValue, 0);
+	//Fake P2P Options
+	chkFakeP2P = CreateWindowEx(controlStyles, "BUTTON", "Use Fake P2P?", checkProperties, 325, 505, 100, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkFakeP2P, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkFakeP2P, BM_SETCHECK, fakeP2PValue, 0);
+	//Emulator Restriction
+	chkEmuRes = CreateWindowEx(controlStyles, "BUTTON", "Restrict Emulator?", checkProperties, 150, 505, 105, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkEmuRes, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkEmuRes, BM_SETCHECK, emuResValue, 0);
+	//Connection Restriction
+	chkConnRes = CreateWindowEx(controlStyles, "BUTTON", "Restrict Connection Type?", checkProperties, 150, 535, 145, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkConnRes, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkConnRes, BM_SETCHECK, connResValue, 0);
+	//Version
+	btnVersion = CreateWindowEx(controlStyles, "BUTTON", "Server Version", buttonProperties, 500, 530, 80, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnVersion, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+
+
+	//P2P
+	/*txtP2PServer = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", p2pServer, textboxProperties, 10, 520, 210,25, form1, NULL, hInstance, NULL);
+	SendMessage(txtP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblP2PServer = CreateWindowEx(controlStyles, "STATIC", "Server IP:", labelProperties, 10, 505, 210, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//P2P Port Textbox
+	txtP2PPort = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", p2pPort, textboxProperties, 225, 520, 60,25, form1, NULL, hInstance, NULL);
+	SendMessage(txtP2PPort, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblP2PPort = CreateWindowEx(controlStyles, "STATIC", "Port#:", labelProperties, 225, 505, 60, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblP2PPort, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Login Button
+	btnP2PStart = CreateWindowEx(controlStyles, "BUTTON", "Start", buttonProperties, 500, 530, 60,25, form1, NULL, hInstance, NULL);
+	SendMessage(btnP2PStart, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Connect
+	btnP2PConnect = CreateWindowEx(controlStyles, "BUTTON", "Connect to Server", buttonProperties,290, 520, 100, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnP2PConnect, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Server
+	btnP2PServer = CreateWindowEx(controlStyles, "BUTTON", "Start as Server", buttonProperties, 395, 520, 100, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnP2PServer, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));*/
 
 
 
-		//Quit Textbox
-		txtQuit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", quit, textboxProperties, 245, 530, 205, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtQuit, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblQuit = CreateWindowEx(controlStyles, "STATIC", "Quit msg:", labelProperties, 196, 535, 46, 25, form1, NULL, hInstance, NULL);
-		SendMessage(lblQuit, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Stats Label
-		lblStats = CreateWindowEx(controlStyles, "STATIC", cVersion, labelProperties, 510, 510, 270, 15, form1, NULL, hInstance, NULL);
-		SendMessage(lblStats, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Server IP Textbox
-		txtServerIP = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", serverIP, textboxProperties, 40, 505, 150, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtServerIP, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblServerIP = CreateWindowEx(controlStyles, "STATIC", "IP:", labelProperties, 23, 510, 15, 25, form1, NULL, hInstance, NULL);
-		SendMessage(lblServerIP, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Username Textbox
-		txtUsername = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", username, textboxProperties, 40, 530, 150, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtUsername, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		lblUsername = CreateWindowEx(controlStyles, "STATIC", "Nick:", labelProperties, 10, 535, 25, 25, form1, NULL, hInstance, NULL);
-		SendMessage(lblUsername, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Show Chatroom
-		btnChatroom = CreateWindowEx(controlStyles, "BUTTON", "Servers", buttonProperties, 590, 530, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnChatroom, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Login Button
-		btnLogin = CreateWindowEx(controlStyles, "BUTTON", "Login", buttonProperties, 655, 530, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnLogin, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Logoff Button
-		btnLogoff = CreateWindowEx(controlStyles,"BUTTON", "Logoff", buttonProperties, 720, 530, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnLogoff, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Connection Type Combobox
-		cmbConnectionType = CreateWindow("COMBOBOX", NULL, comboboxProperties, 495, 535, 90, 500, form1, NULL, hInstance, NULL);
-		SendMessage(cmbConnectionType, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"LAN");
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Excellent");
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Good");
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Average");
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Low");
-		SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Bad");
-		SendMessage(cmbConnectionType, CB_SETCURSEL, connectionType - 1, 0); 
-		lblConnectionType = CreateWindowEx(controlStyles, "STATIC", "Type:", labelProperties, 462, 538, 30, 20, form1, NULL, hInstance, NULL);
-		SendMessage(lblConnectionType, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		
-		//Chatroom Options
-		chkJoinChat = CreateWindowEx(controlStyles,"BUTTON", "Show Join/Left Notifications?", checkProperties, 10, 505, 150, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkJoinChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkJoinChat, BM_SETCHECK, joinChatValue, 0);
+	//Quit Textbox
+	txtQuit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", quit, textboxProperties, 245, 530, 205, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtQuit, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblQuit = CreateWindowEx(controlStyles, "STATIC", "Quit msg:", labelProperties, 196, 535, 46, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblQuit, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Stats Label
+	lblStats = CreateWindowEx(controlStyles, "STATIC", cVersion, labelProperties, 510, 510, 270, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblStats, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Server IP Textbox
+	txtServerIP = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", serverIP, textboxProperties, 40, 505, 150, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtServerIP, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblServerIP = CreateWindowEx(controlStyles, "STATIC", "IP:", labelProperties, 23, 510, 14, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblServerIP, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Username Textbox
+	txtUsername = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", username, textboxProperties, 40, 530, 150, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtUsername, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	lblUsername = CreateWindowEx(controlStyles, "STATIC", "Nick:", labelProperties, 11, 535, 26, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblUsername, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Show Chatroom
+	btnChatroom = CreateWindowEx(controlStyles, "BUTTON", "Servers", buttonProperties, 590, 530, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnChatroom, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Login Button
+	btnLogin = CreateWindowEx(controlStyles, "BUTTON", "Login", buttonProperties, 655, 530, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnLogin, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Logoff Button
+	btnLogoff = CreateWindowEx(controlStyles, "BUTTON", "Logoff", buttonProperties, 720, 530, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnLogoff, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Connection Type Combobox
+	cmbConnectionType = CreateWindow("COMBOBOX", NULL, comboboxProperties, 495, 535, 90, 500, form1, NULL, hInstance, NULL);
+	SendMessage(cmbConnectionType, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"LAN");
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Excellent");
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Good");
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Average");
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Low");
+	SendMessage(cmbConnectionType, CB_ADDSTRING, 0, (LPARAM)"Bad");
+	SendMessage(cmbConnectionType, CB_SETCURSEL, connectionType - 1, 0);
+	lblConnectionType = CreateWindowEx(controlStyles, "STATIC", "Type:", labelProperties, 462, 538, 30, 15, form1, NULL, hInstance, NULL);
+	SendMessage(lblConnectionType, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
 
-		chkCreate = CreateWindowEx(controlStyles,"BUTTON", "Show Create/Close Notifications?", checkProperties, 10, 535, 180, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkCreate, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkCreate, BM_SETCHECK, createValue, 0);
+	//Chatroom Options
+	chkJoinChat = CreateWindowEx(controlStyles, "BUTTON", "Show Join/Left Notifications?", checkProperties, 10, 505, 150, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkJoinChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkJoinChat, BM_SETCHECK, joinChatValue, 0);
 
-		chkKeepChatLogs = CreateWindowEx(controlStyles,"BUTTON", "Keep Logs?", checkProperties, 350, 505, 100, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkKeepChatLogs, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkKeepChatLogs, BM_SETCHECK, chatLogValue, 0);
+	chkCreate = CreateWindowEx(controlStyles, "BUTTON", "Show Create/Close Notifications?", checkProperties, 10, 535, 180, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkCreate, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkCreate, BM_SETCHECK, createValue, 0);
 
-		chkShowError = CreateWindowEx(controlStyles,"BUTTON", "Show Rom/Emulator Errors?", checkProperties, 180, 505, 155, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkShowError, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkShowError, BM_SETCHECK, errorValue, 0);
+	chkKeepChatLogs = CreateWindowEx(controlStyles, "BUTTON", "Keep Logs?", checkProperties, 350, 505, 100, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkKeepChatLogs, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkKeepChatLogs, BM_SETCHECK, chatLogValue, 0);
 
-		chkDrop = CreateWindowEx(controlStyles,"BUTTON", "Show Dropped Packet Alerts?", checkProperties, 400, 535, 165, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkDrop, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkDrop, BM_SETCHECK, dropValue, 0);
+	chkShowError = CreateWindowEx(controlStyles, "BUTTON", "Show Rom/Emulator Errors?", checkProperties, 180, 505, 155, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkShowError, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkShowError, BM_SETCHECK, errorValue, 0);
 
-		chkJoinDbl = CreateWindowEx(controlStyles,"BUTTON", "Allow double click to join game?", checkProperties, 210, 535, 170, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkJoinDbl, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkJoinDbl, BM_SETCHECK, joinDblValue, 0);
+	chkDrop = CreateWindowEx(controlStyles, "BUTTON", "Show Dropped Packet Alerts?", checkProperties, 400, 535, 165, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkDrop, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkDrop, BM_SETCHECK, dropValue, 0);
 
-		//Gameroom Options
-		chkJoinChatGame = CreateWindowEx(controlStyles,"BUTTON", "Show Join/Left Notifications?", checkProperties, 10, 505, 170, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkJoinChatGame, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkJoinChatGame, BM_SETCHECK, joinChatGameValue, 0);
+	chkJoinDbl = CreateWindowEx(controlStyles, "BUTTON", "Allow double click to join game?", checkProperties, 210, 535, 170, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkJoinDbl, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkJoinDbl, BM_SETCHECK, joinDblValue, 0);
 
-		
-		chkBeep = CreateWindowEx(controlStyles,"BUTTON", "Beep when User Joins?", checkProperties, 10, 535, 170, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkBeep, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkBeep, BM_SETCHECK, beepValue, 0);
-
-		chkUseScreenChat = CreateWindowEx(controlStyles,"BUTTON", "Use Screen Chat?", checkProperties, 180, 535, 150, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkUseScreenChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkUseScreenChat, BM_SETCHECK, useScreenChatValue, 0);
-
-		chkKeepGameChatLogs = CreateWindowEx(controlStyles,"BUTTON", "Keep Gameroom Logs?", checkProperties, 180, 505, 140, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkKeepGameChatLogs, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkKeepGameChatLogs, BM_SETCHECK, gameChatLogValue, 0);
-
-		chkBlink = CreateWindowEx(controlStyles,"BUTTON", "Blink when User Joins?", checkProperties, 330, 505, 140, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkBlink, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkBlink, BM_SETCHECK, blinkValue, 0);
-
-		chkUseCache = CreateWindowEx(controlStyles,"BUTTON", "Use Cache? [Experiment for best Performance]", checkProperties, 330, 535, 260, 25, form1, NULL, hInstance, NULL);
-		SendMessage(chkUseCache, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(chkUseCache, BM_SETCHECK, useCacheValue, 0);
+	//Gameroom Options
+	chkJoinChatGame = CreateWindowEx(controlStyles, "BUTTON", "Show Join/Left Notifications?", checkProperties, 10, 505, 170, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkJoinChatGame, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkJoinChatGame, BM_SETCHECK, joinChatGameValue, 0);
 
 
-		int i;
+	chkBeep = CreateWindowEx(controlStyles, "BUTTON", "Beep when User Joins?", checkProperties, 10, 535, 170, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkBeep, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkBeep, BM_SETCHECK, beepValue, 0);
 
-		//Recent
-		for(i = recentCount; i >= 0; i--){
-			if(/*strlen(recentServers[i].server) > 0 && */strlen(recentServers[i].ip) > 0/* && strlen(recentServers[i].location) > 0*/)
-				recentlistAdditem(recentServers[i].server, recentServers[i].ip, recentServers[i].location);
-		}
-		
-		//Favorites
-		for(i = favoriteCount; i >= 0; i--){
-			if(/*strlen(favoriteServers[i].server) > 0 && */strlen(favoriteServers[i].ip) > 0/* && strlen(favoriteServers[i].location) > 0*/)
-				favoritelistAdditem(favoriteServers[i].server, favoriteServers[i].ip, favoriteServers[i].location, favoriteServers[i].comments);
-		}
+	chkUseScreenChat = CreateWindowEx(controlStyles, "BUTTON", "Use Screen Chat?", checkProperties, 180, 535, 150, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkUseScreenChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkUseScreenChat, BM_SETCHECK, useScreenChatValue, 0);
 
-		showOptions(1);
-		displayAndAutoScrollRichEdit(txtChatroom, initText, RGB(205, 133, 0));
+	chkKeepGameChatLogs = CreateWindowEx(controlStyles, "BUTTON", "Keep Gameroom Logs?", checkProperties, 180, 505, 140, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkKeepGameChatLogs, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkKeepGameChatLogs, BM_SETCHECK, gameChatLogValue, 0);
 
-		if(showChatroomFirst == true)
-			showChatroom(true);
-		else
-			showChatroom(false);
+	chkBlink = CreateWindowEx(controlStyles, "BUTTON", "Blink when User Joins?", checkProperties, 330, 505, 140, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkBlink, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkBlink, BM_SETCHECK, blinkValue, 0);
 
-		EditProcTxtMaxUsers = (WNDPROC)GetWindowLong(txtMaxUsers, GWL_WNDPROC);
-		SetWindowLong(txtMaxUsers, GWL_WNDPROC, (long)SubProcTxtMaxUsers);
+	chkUseCache = CreateWindowEx(controlStyles, "BUTTON", "Use Cache? [Experiment for best Performance]", checkProperties, 330, 535, 260, 25, form1, NULL, hInstance, NULL);
+	SendMessage(chkUseCache, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(chkUseCache, BM_SETCHECK, useCacheValue, 0);
 
-		EditProcTxtMaxPing = (WNDPROC)GetWindowLong(txtMaxPing, GWL_WNDPROC);
-		SetWindowLong(txtMaxPing, GWL_WNDPROC, (long)SubProcTxtMaxPing);
 
-		//EditProcTxtREmulator = (WNDPROC)GetWindowLong(txtREmulator, GWL_WNDPROC);
-		//SetWindowLong(txtREmulator, GWL_WNDPROC, (long)SubProcTxtREmulator);
+	int i;
 
-		EditProcTxtIP = (WNDPROC)GetWindowLong(txtServerIP, GWL_WNDPROC);
-		SetWindowLong(txtServerIP, GWL_WNDPROC, (long)SubProcTxtIP);
+	//Recent
+	for (i = recentCount; i >= 0; i--) {
+		if (/*strlen(recentServers[i].server) > 0 && */strlen(recentServers[i].ip) > 0/* && strlen(recentServers[i].location) > 0*/)
+			recentlistAdditem(recentServers[i].server, recentServers[i].ip, recentServers[i].location);
+	}
 
-		EditProcTxtNick = (WNDPROC)GetWindowLong(txtUsername, GWL_WNDPROC);
-		SetWindowLong(txtUsername, GWL_WNDPROC, (long)SubProcTxtNick);
+	//Favorites
+	for (i = favoriteCount; i >= 0; i--) {
+		if (/*strlen(favoriteServers[i].server) > 0 && */strlen(favoriteServers[i].ip) > 0/* && strlen(favoriteServers[i].location) > 0*/)
+			favoritelistAdditem(favoriteServers[i].server, favoriteServers[i].ip, favoriteServers[i].location, favoriteServers[i].comments);
+	}
 
-		EditProcTxtQuit = (WNDPROC)GetWindowLong(txtQuit, GWL_WNDPROC);
-		SetWindowLong(txtQuit, GWL_WNDPROC, (long)SubProcTxtQuit);
+	showOptions(1);
+	displayAndAutoScrollRichEdit(txtChatroom, initText, RGB(205, 133, 0));
 
-		EditProcTxtChatroom = (WNDPROC)GetWindowLong(txtChatroom, GWL_WNDPROC);
-		SetWindowLong(txtChatroom, GWL_WNDPROC, (long)SubProcTxtChatroom);
+	if (showChatroomFirst == true)
+		showChatroom(true);
+	else
+		showChatroom(false);
+
+	EditProcTxtMaxUsers = (WNDPROC)GetWindowLongPtr(txtMaxUsers, GWLP_WNDPROC);
+	SetWindowLongPtr(txtMaxUsers, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtMaxUsers);
+
+	EditProcTxtMaxPing = (WNDPROC)GetWindowLongPtr(txtMaxPing, GWLP_WNDPROC);
+	SetWindowLongPtr(txtMaxPing, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtMaxPing);
+
+	EditProcTxtIP = (WNDPROC)GetWindowLongPtr(txtServerIP, GWLP_WNDPROC);
+	SetWindowLongPtr(txtServerIP, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtIP);
+
+	EditProcTxtNick = (WNDPROC)GetWindowLongPtr(txtUsername, GWLP_WNDPROC);
+	SetWindowLongPtr(txtUsername, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtNick);
+
+	EditProcTxtQuit = (WNDPROC)GetWindowLongPtr(txtQuit, GWLP_WNDPROC);
+	SetWindowLongPtr(txtQuit, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtQuit);
+
+	EditProcTxtChatroom = (WNDPROC)GetWindowLongPtr(txtChatroom, GWLP_WNDPROC);
+	SetWindowLongPtr(txtChatroom, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtChatroom);
 }
 
 
@@ -2820,7 +2726,6 @@ void awayAdditem(char subject[], char message[], int value){
 }
 
 void createEditFavoritesWindow(){
-//	int i;
 	RECT b;
 	LVITEM q;
 	int iSelect;
@@ -2930,7 +2835,6 @@ void createEditFavoritesWindow(){
 
 
 void createCommentsWindow(){
-//	int i;
 	RECT b;
 
 	//Get Window Position
@@ -3151,7 +3055,6 @@ void parseWaitingGames(){
 void parseServerList3D(){
 	char serverName[1024];
 	char ipAddress[1024];
-//	char ping[1024];
 	char location[1024];
 	char users[1024];
 	char games[1024];
@@ -3251,10 +3154,6 @@ void parseServerList3D(){
 		
 
 		Serverlist3DAdditem(serverName, ipAddress, "NA", location, users, games, version);
-
-		//closesocket(mySocketServerListK);
-		//kailleraPingThread = CreateThread(NULL, 0, pingKailleraServers, NULL, 0, NULL);
-		//return;
 	}
 
 	numOfServers = SendMessage(lstServerList3D, LVM_GETITEMCOUNT, 0, 0);
@@ -3266,7 +3165,6 @@ void parseServerList3D(){
 void parseServerListK(){
 	char serverName[1024];
 	char ipAddress[1024];
-//	char ping[1024];
 	char location[1024];
 	char users[1024];
 	char games[1024];
@@ -3366,10 +3264,6 @@ void parseServerListK(){
 		
 
 		kServerlistAdditem(serverName, ipAddress, "NA", location, users, games, version);
-
-		//closesocket(mySocketServerListK);
-		//kailleraPingThread = CreateThread(NULL, 0, pingKailleraServers, NULL, 0, NULL);
-		//return;
 	}
 
 	numOfServers = SendMessage(lstServerListK, LVM_GETITEMCOUNT, 0, 0);
@@ -3379,7 +3273,6 @@ void parseServerListK(){
 
 
 DWORD WINAPI pingKailleraServers(LPVOID lpParam){
-//	unsigned long addr;
 	unsigned short port;
 	int buff;
 	int i;
@@ -3504,14 +3397,19 @@ DWORD WINAPI pingKailleraServers(LPVOID lpParam){
 			}
 		}
 	}
+
+	kailleraSwitch = false;
+	lstServerlistKColumn = 2;
+	ListView_SortItemsEx(lstServerListK, lstServerlistKCompareFunc, 0);
+	lstServerlistKColumn = 0;
+
 	SetWindowText(form1, "Kaillera Pinging Finished!");
-	pingingK = false;
+	exitPingKThread();
 	closesocket(mySocketK);
 	return 0;
 }
 
 DWORD WINAPI ping3DServers(LPVOID lpParam){
-//	unsigned long addr;
 	unsigned short port;
 	int buff;
 	int i;
@@ -3637,15 +3535,21 @@ DWORD WINAPI ping3DServers(LPVOID lpParam){
 			}
 		}
 	}
+
+	anti3DSwitch = false;
+	lstServerlist3DColumn = 2;
+	ListView_SortItemsEx(lstServerList3D, lstServerlist3DCompareFunc, 0);
+	lstServerlist3DColumn = 0;
+
 	SetWindowText(form1, "Anti3D Pinging Finished!");
-	pinging3D = false;
+	exitPing3DThread();
 	closesocket(mySocket3D);
 	return 0;
 }
 
 
 
-//NEW
+
 void gameInit(){
     unsigned long i;
 	int w;
@@ -3735,143 +3639,139 @@ void gameInit(){
 
 
 void createChatroom(){
-		LVCOLUMN LvCol;
-//		LVITEM LvItem;
-//		TCITEM v; 
+	LVCOLUMN LvCol;
 
-		//form2 = CreateWindow("Supraclient", "Window", WS_CHILD | WS_VISIBLE , 100,100, 800, 600, form1, NULL, hInstance, NULL);
+	//Create Form
+	//Create Server List Frame
+	//Create Main Chatroom
+	txtChatroom = CreateWindowEx(WS_EX_CLIENTEDGE, "RichEdit", NULL, richTextboxProperties, 5, 5, 480, 260, form1, NULL, hInstance, NULL);
+	SendMessage(txtChatroom, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(txtChatroom, EM_SHOWSCROLLBAR, SB_VERT, true);
+	SendMessage(txtChatroom, EM_SETREADONLY, true, 0);
+	WORD mask1 = SendMessage(txtChatroom, EM_GETEVENTMASK, 0, 0);
+	SendMessage(txtChatroom, EM_SETEVENTMASK, 0, mask1 | ENM_LINK);
+	SendMessage(txtChatroom, EM_AUTOURLDETECT, (WPARAM)true, 0);//URL detect
 
-		//Create Form
-		//Create Server List Frame
-		//Create Main Chatroom
-		txtChatroom = CreateWindowEx(WS_EX_CLIENTEDGE, "RichEdit", NULL, richTextboxProperties, 5, 5, 480, 260, form1, NULL, hInstance, NULL);
-		SendMessage(txtChatroom, WM_SETFONT, (WPARAM) hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(txtChatroom, EM_SHOWSCROLLBAR, SB_VERT, true);
-		SendMessage(txtChatroom, EM_SETREADONLY, true, 0);
-		WORD mask1 = SendMessage(txtChatroom, EM_GETEVENTMASK, 0, 0);
-		SendMessage(txtChatroom, EM_SETEVENTMASK, 0, mask1 | ENM_LINK);
-		SendMessage(txtChatroom, EM_AUTOURLDETECT, (WPARAM) true, 0);//URL detect
+	//Create Game Chatroom
+	txtGameChatroom = CreateWindowEx(WS_EX_CLIENTEDGE, "RichEdit", "<New Session>\r\n", richTextboxProperties, 5, 330, 480, 115, form1, NULL, hInstance, NULL);
+	SendMessage(txtGameChatroom, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	SendMessage(txtGameChatroom, EM_SHOWSCROLLBAR, SB_VERT, true);
+	SendMessage(txtGameChatroom, EM_SETREADONLY, true, 0);
+	WORD mask2 = SendMessage(txtGameChatroom, EM_GETEVENTMASK, 0, 0);
+	SendMessage(txtGameChatroom, EM_SETEVENTMASK, 0, mask2 | ENM_LINK);
+	SendMessage(txtGameChatroom, EM_AUTOURLDETECT, (WPARAM)true, 0);//URL detect
+	//Game Chat Textbox
+	txtGameChat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, textboxProperties, 5, 450, 350, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtGameChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Chat Button
+	btnGameChat = CreateWindowEx(controlStyles, "BUTTON", "Chat", buttonProperties, 360, 450, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnGameChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Lagstat Button
+	btnLagStat = CreateWindowEx(controlStyles, "BUTTON", "Lag Stat", buttonProperties, 425, 450, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnLagStat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
 
-		//Create Game Chatroom
-		txtGameChatroom = CreateWindowEx(WS_EX_CLIENTEDGE, "RichEdit", "<New Session>\r\n", richTextboxProperties, 5, 330, 480, 115, form1, NULL, hInstance, NULL);
-		SendMessage(txtGameChatroom, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		SendMessage(txtGameChatroom, EM_SHOWSCROLLBAR, SB_VERT, true);
-		SendMessage(txtGameChatroom, EM_SETREADONLY, true, 0);
-		WORD mask2 = SendMessage(txtGameChatroom, EM_GETEVENTMASK, 0, 0);
-		SendMessage(txtGameChatroom, EM_SETEVENTMASK, 0, mask2 | ENM_LINK);
-		SendMessage(txtGameChatroom, EM_AUTOURLDETECT, (WPARAM) true, 0);//URL detect
-		//Game Chat Textbox
-		txtGameChat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, textboxProperties, 5, 450, 350, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtGameChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Game Chat Button
-		btnGameChat = CreateWindowEx(controlStyles, "BUTTON", "Chat", buttonProperties, 360, 450, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnGameChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Lagstat Button
-		btnLagStat = CreateWindowEx(controlStyles, "BUTTON", "Lag Stat", buttonProperties, 425, 450, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnLagStat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Start Button
+	btnGameStart = CreateWindowEx(controlStyles, "BUTTON", "Start", buttonProperties, 490, 300, 50, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnGameStart, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Kick Button
+	btnGameKick = CreateWindowEx(controlStyles, "BUTTON", "Kick", buttonProperties, 550, 300, 50, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnGameKick, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Drop Button
+	btnDrop = CreateWindowEx(controlStyles, "BUTTON", "Drop", buttonProperties, 610, 300, 50, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnDrop, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Away Button
+	btnAway = CreateWindowEx(controlStyles, "BUTTON", "Away", buttonProperties, 670, 300, 50, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnAway, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Leave Button
+	btnGameLeave = CreateWindowEx(controlStyles, "BUTTON", "Leave", buttonProperties, 730, 300, 50, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnGameLeave, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
 
-		//Game Start Button
-		btnGameStart = CreateWindowEx(controlStyles, "BUTTON", "Start", buttonProperties, 490, 300, 50, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnGameStart, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Game Kick Button
-		btnGameKick = CreateWindowEx(controlStyles, "BUTTON", "Kick", buttonProperties, 550, 300, 50, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnGameKick, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Game Drop Button
-		btnDrop = CreateWindowEx(controlStyles, "BUTTON", "Drop", buttonProperties, 610, 300, 50, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnDrop, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Game Away Button
-		btnAway = CreateWindowEx(controlStyles, "BUTTON", "Away", buttonProperties, 670, 300, 50, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnAway, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Game Leave Button
-		btnGameLeave = CreateWindowEx(controlStyles, "BUTTON", "Leave", buttonProperties, 730, 300, 50, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnGameLeave, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-
-		//Game Name Textbox
-		txtGame = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Not in Game!", buttonProperties | ES_READONLY | WS_BORDER, 5, 300, 480, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtGame, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Create GameUserlist
-		lstGameUserlist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 490, 330, 295, 145, form1, NULL, hInstance, NULL);
-		SendMessage(lstGameUserlist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;
-		LvCol.pszText="UserID\0";
-		LvCol.cx=45;
-		SendMessage(lstGameUserlist,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="Nick\0";
-		LvCol.cx=135;
-		SendMessage(lstGameUserlist,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Ping\0";
-		LvCol.cx=35;
-		SendMessage(lstGameUserlist,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Type\0";
-		LvCol.cx=59;
-		SendMessage(lstGameUserlist,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol); 
-		SendMessage(lstGameUserlist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Create Userlist
-		lstUserlist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 490, 5, 295, 290, form1, NULL, hInstance, NULL);
-		SendMessage(lstUserlist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;
-		LvCol.pszText="UserID\0";
-		LvCol.cx=45;
-		SendMessage(lstUserlist,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);
-		LvCol.pszText="Nick\0";
-		LvCol.cx=105;
-		SendMessage(lstUserlist,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Ping\0";
-		LvCol.cx=35;
-		SendMessage(lstUserlist,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Type\0";
-		LvCol.cx=43;
-		SendMessage(lstUserlist,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol); 
-		LvCol.pszText="Status\0";
-		LvCol.cx=46;
-		SendMessage(lstUserlist,LVM_INSERTCOLUMN,4,(LPARAM)&LvCol); 
-		SendMessage(lstUserlist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles);
-		//Create Gamelist
-		lstGamelist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 5, 300, 780, 175, form1, NULL, hInstance, NULL);
-		SendMessage(lstGamelist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		memset(&LvCol,0,sizeof(LvCol));
-		LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;
-		LvCol.pszText="GameID\0";
-		LvCol.cx=55;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol); 
-		LvCol.pszText="Game\0";
-		LvCol.cx=290;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);
-		LvCol.pszText="Emulator\0";
-		LvCol.cx=204;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
-		LvCol.pszText="Owner\0";
-		LvCol.cx=105;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol); 
-		LvCol.pszText="Status\0";
-		LvCol.cx=55;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,4,(LPARAM)&LvCol);
-		LvCol.pszText="#Users\0";
-		LvCol.cx=50;
-		SendMessage(lstGamelist,LVM_INSERTCOLUMN,5,(LPARAM)&LvCol);
-		SendMessage(lstGamelist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0 , (LPARAM) listviewStyles); 
-		//Chat Textbox
-		txtChat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, textboxProperties, 5, 270, 285, 25, form1, NULL, hInstance, NULL);
-		SendMessage(txtChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Chat Button
-		btnChat = CreateWindowEx(controlStyles, "BUTTON", "Chat", buttonProperties, 295, 270, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Create Button
-		btnCreate = CreateWindowEx(controlStyles, "BUTTON", "Create", buttonProperties, 360, 270, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnCreate, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
-		//Join Button
-		btnJoin = CreateWindowEx(controlStyles, "BUTTON", "Join", buttonProperties, 425, 270, 60, 25, form1, NULL, hInstance, NULL);
-		SendMessage(btnJoin, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Game Name Textbox
+	txtGame = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Not in Game!", buttonProperties | ES_READONLY | WS_BORDER, 5, 300, 480, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtGame, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Create GameUserlist
+	lstGameUserlist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 490, 330, 295, 145, form1, NULL, hInstance, NULL);
+	SendMessage(lstGameUserlist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "UserID\0";
+	LvCol.cx = 45;
+	SendMessage(lstGameUserlist, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Nick\0";
+	LvCol.cx = 135;
+	SendMessage(lstGameUserlist, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Ping\0";
+	LvCol.cx = 35;
+	SendMessage(lstGameUserlist, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Type\0";
+	LvCol.cx = 59;
+	SendMessage(lstGameUserlist, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	SendMessage(lstGameUserlist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Userlist
+	lstUserlist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 490, 5, 295, 290, form1, NULL, hInstance, NULL);
+	SendMessage(lstUserlist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "UserID\0";
+	LvCol.cx = 45;
+	SendMessage(lstUserlist, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Nick\0";
+	LvCol.cx = 105;
+	SendMessage(lstUserlist, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Ping\0";
+	LvCol.cx = 35;
+	SendMessage(lstUserlist, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Type\0";
+	LvCol.cx = 43;
+	SendMessage(lstUserlist, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	LvCol.pszText = "Status\0";
+	LvCol.cx = 46;
+	SendMessage(lstUserlist, LVM_INSERTCOLUMN, 4, (LPARAM)&LvCol);
+	SendMessage(lstUserlist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Create Gamelist
+	lstGamelist = CreateWindowEx(WS_EX_CLIENTEDGE, "SysListView32", NULL, listviewProperties, 5, 300, 780, 175, form1, NULL, hInstance, NULL);
+	SendMessage(lstGamelist, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	memset(&LvCol, 0, sizeof(LvCol));
+	LvCol.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+	LvCol.pszText = "GameID\0";
+	LvCol.cx = 55;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 0, (LPARAM)&LvCol);
+	LvCol.pszText = "Game\0";
+	LvCol.cx = 290;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 1, (LPARAM)&LvCol);
+	LvCol.pszText = "Emulator\0";
+	LvCol.cx = 204;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 2, (LPARAM)&LvCol);
+	LvCol.pszText = "Owner\0";
+	LvCol.cx = 105;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 3, (LPARAM)&LvCol);
+	LvCol.pszText = "Status\0";
+	LvCol.cx = 55;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 4, (LPARAM)&LvCol);
+	LvCol.pszText = "#Users\0";
+	LvCol.cx = 50;
+	SendMessage(lstGamelist, LVM_INSERTCOLUMN, 5, (LPARAM)&LvCol);
+	SendMessage(lstGamelist, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, (LPARAM)listviewStyles);
+	//Chat Textbox
+	txtChat = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, textboxProperties, 5, 270, 285, 25, form1, NULL, hInstance, NULL);
+	SendMessage(txtChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Chat Button
+	btnChat = CreateWindowEx(controlStyles, "BUTTON", "Chat", buttonProperties, 295, 270, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnChat, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Create Button
+	btnCreate = CreateWindowEx(controlStyles, "BUTTON", "Create", buttonProperties, 360, 270, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnCreate, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
+	//Join Button
+	btnJoin = CreateWindowEx(controlStyles, "BUTTON", "Join", buttonProperties, 425, 270, 60, 25, form1, NULL, hInstance, NULL);
+	SendMessage(btnJoin, WM_SETFONT, (WPARAM)hDefaultFont, MAKELPARAM(FALSE, 0));
 
 
-		//SubClass txtChat
-		EditProcTxtChat = (WNDPROC)GetWindowLong(txtChat, GWL_WNDPROC);
-		SetWindowLong(txtChat, GWL_WNDPROC, (long)SubProcTxtChat);
-		//SubClass txtGameChat
-		EditProcTxtGameChat = (WNDPROC)GetWindowLong(txtGameChat, GWL_WNDPROC);
-		SetWindowLong(txtGameChat, GWL_WNDPROC, (long)SubProcTxtGameChat);
+	//SubClass txtChat
+	EditProcTxtChat = (WNDPROC)GetWindowLongPtr(txtChat, GWLP_WNDPROC);
+	SetWindowLongPtr(txtChat, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtChat);
+	//SubClass txtGameChat
+	EditProcTxtGameChat = (WNDPROC)GetWindowLongPtr(txtGameChat, GWLP_WNDPROC);
+	SetWindowLongPtr(txtGameChat, GWLP_WNDPROC, (DWORD_PTR)SubProcTxtGameChat);
 }
 
 void fixLastGameToPlay(){
@@ -3922,7 +3822,6 @@ void fixLastGameToPlay(){
 //Very Messy here. Good Luck!
 void popupMenu(char num){
 	unsigned long i;
-//	int w;
 	RECT b;	
 	POINT c;
 	char temp[2048];
@@ -3931,7 +3830,6 @@ void popupMenu(char num){
 	char server[1024];
 	char ip[1024];
 	char location[1024];
-//	char comments[1024];
 	int iSelect;
 	char str[1024];
 	LVITEM q;
@@ -4297,16 +4195,16 @@ void popupMenu(char num){
 		}
 		//Ping
 		else if(i == 0xFFD7){
-			if (pingingK == false) {
-				if (tempS == lstServerListK) {
-					TerminateThread(pingKailleraServers, 0);
-					//CloseHandle(kailleraPingThread);
+			if (tempS == lstServerListK) {
+				if (pingingK == false) {
+					exitPingKThread();
 					SetWindowText(form1, "Pinging Kaillera Servers...");
 					kailleraPingThread = CreateThread(NULL, 0, pingKailleraServers, NULL, 0, NULL);
 				}
-				else {
-					TerminateThread(ping3DServers, 0);
-					//CloseHandle(ping3DThread);
+			}
+			else {
+				if (pinging3D == false) {
+					exitPing3DThread();
 					SetWindowText(form1, "Pinging Anti3D Servers...");
 					ping3DThread = CreateThread(NULL, 0, ping3DServers, NULL, 0, NULL);
 				}
@@ -4315,16 +4213,12 @@ void popupMenu(char num){
 		//Stop
 		else if(i == 0xFFD6){
 			if(tempS == lstServerListK){
-				pingingK = false;
+				exitPingKThread();
 				SetWindowText(form1, "Kaillera Pinging Stopped!");
-				TerminateThread(kailleraPingThread, 0);
-				//CloseHandle(kailleraPingThread);
 			}
 			else{
-				pinging3D = false;
+				exitPing3DThread();
 				SetWindowText(form1, "Anti3D Pinging Stopped!");
-				TerminateThread(ping3DThread, 0);
-				//CloseHandle(ping3DThread);
 			}
 		}	
 		//For Connect
@@ -5038,8 +4932,6 @@ int saveConfig(){
 	//EmuSF_Emulator
 	v = SendMessage(chkEmuRes, BM_GETCHECK, 0, 0);
 	config << "EmuSF_Emulator=" << v << "\n";
-	//GetWindowText(txtREmulator, rEmulatorValue, GetWindowTextLength(txtREmulator) + 1);
-	//config << "EmuSF_Emulator=" << rEmulatorValue << "\n";
 
 	//EmuSF_Connection Type
 	v = SendMessage(chkConnRes, BM_GETCHECK, 0, 0);
@@ -5199,8 +5091,6 @@ void loginToServer(){
 	
 	socketInfo.sin_family = AF_INET;
     socketInfo.sin_port = htons(myPort);
-	
-//	unsigned long addr;
 
 	
 	displayChatroomAsServer("Resolving host...");
@@ -5221,6 +5111,8 @@ void loginToServer(){
 
 	displayChatroomAsServer("Connecting...");
 	DoEvents();
+
+	connection = true;
 
     //memset(&(socketInfo.sin_zero), 0, 8); 
 	recvLoopThread = CreateThread(NULL, 0, recvLoop, NULL, 0, NULL);
@@ -5255,7 +5147,6 @@ DWORD WINAPI continuousLoop(LPVOID lpParam){
 	for(; ;){
 		if(gamePlaying == false && loggedIn)
 			clientKeepAlive();
-		//saveConfig();
 		Sleep(20000);		
 	}
 	return 0;
@@ -5330,7 +5221,7 @@ DWORD WINAPI recvLoop(LPVOID lpParam){
 			if(msgType >= 0x01 && msgType <= 0x17){
 				parseData(myBuffCount, msgType);
 			}
-			else if (strncmp(&myBuff[myBuffCount].myBuff[0], "HELLOD00D", 9) == 0){  
+			else if (strncmp(&myBuff[myBuffCount].myBuff[0], "HELLOD00D", 9) == 0){ 
 				strncpy(str,&myBuff[myBuffCount].myBuff[9],6);
 				myPort = cStrToInt(str);
 				socketInfo.sin_family = AF_INET;
@@ -5341,7 +5232,7 @@ DWORD WINAPI recvLoop(LPVOID lpParam){
 					socketInfo.sin_addr.s_addr = *((unsigned long*)hp->h_addr);
 				}
 				else
-					socketInfo.sin_addr.s_addr = inet_addr(myAddress);
+					socketInfo.sin_addr.s_addr = inet_addr(myAddress); 
 
 				//memset(&(socketInfo.sin_zero), 0, 8); 
 
@@ -5399,11 +5290,9 @@ DWORD WINAPI recvLoop(LPVOID lpParam){
 
 void parseData(int slot, unsigned char msgType){
     short i;
-//  unsigned long w;
     unsigned short temp;
     unsigned char numOfMessages;
     unsigned short msgNum;
-//	unsigned short msgLen;
 	long msgNumCount;
        
     //How many messages are in packet
@@ -5437,7 +5326,7 @@ void parseData(int slot, unsigned char msgType){
 		//Can't Recover some Messages =(
         if(msgNumCount > numOfMessages){
 			if(SendMessage(chkDrop, BM_GETCHECK, 0, 0) == BST_CHECKED)
-				displayAndAutoScrollRichEdit(txtChatroom, "<ALERT> PACKET(S) DROPPED. Please relogin or client won't be updated!\n", RGB(255, 0, 0));
+				displayAndAutoScrollRichEdit(txtChatroom, "<ALERT> PACKET(S) DROPPED. Desynch may occur or server updates may be missed.\n", RGB(255, 0, 0));
 			msgNumCount = numOfMessages;
 		}
 
@@ -5541,7 +5430,7 @@ void parseData(){
 void constructPacket(char *data, unsigned short lenData, char msgType){
     int i;
 	int j;
-//	int w;
+
 	//unsigned short normalPacketSize = 0;
 	unsigned short mySize = 0;
 
@@ -5671,39 +5560,52 @@ void gotoMessageType(unsigned short position, char msgType, int slot){
 
 
 void exitGameThread(){
-	startedGame = false;
-	sizeOfEinput = -1;
-	gamePlaying = false;
-	//dropGameRequest();
-	Sleep(20);
-	//clientKeepAlive();
-	EnableWindow(chkUseCache, TRUE);
-	UpdateWindow(form1);
-	continuousLoopThread = CreateThread(NULL, 0, continuousLoop, NULL, 0, NULL);
-	
-	TerminateThread(gameThread, 0);
-	//CloseHandle(gameThread);
+	if (startedGame) {
+		startedGame = false;
+		sizeOfEinput = -1;
+		gamePlaying = false;
+		Sleep(20);
+		EnableWindow(chkUseCache, TRUE);
+		UpdateWindow(form1);
+		TerminateThread(gameThread, 0);
+		CloseHandle(gameThread);
+	}
 }
-
 
 void exitThreads(){
-	TerminateThread(recvLoopThread, 0);
-	TerminateThread(gameThread, 0);
-	TerminateThread(continuousLoop, 0);
-	//CloseHandle(recvLoopThread);
-	//CloseHandle(gameThread);
-	//CloseHandle(continuousLoopThread);
+	if (connection) {
+		connection = false;
+		TerminateThread(recvLoopThread, 0);
+		CloseHandle(recvLoopThread);
+		TerminateThread(continuousLoopThread, 0);
+		CloseHandle(continuousLoopThread);
+	}
 }
+
+void exitPingKThread() {
+	if (pingingK) {
+		pingingK = false;
+		TerminateThread(kailleraPingThread, 0);
+		CloseHandle(kailleraPingThread);
+	}
+}
+
+void exitPing3DThread() {
+	if (pinging3D) {
+		pinging3D = false;
+		TerminateThread(ping3DServers, 0);
+		CloseHandle(ping3DThread);
+	}
+}
+
 
 bool supraCleanup(char type, HWND h){
 	//Complete
-//	LPDWORD b;
-
 	if(type == 0){
 		saveConfig();
 		//Reset Winsock
-		exitThreads();
 		exitGameThread();
+		exitThreads();
 		closesocket(mySocket);
 		myGameID = -1;
 		myUserID = -1;
@@ -5736,9 +5638,8 @@ bool supraCleanup(char type, HWND h){
 	}
 	//Gameroom
 	else if(type == 1){
-		sizeOfEinput = -1;
+		exitGameThread();
 		myGameID = -1;
-		gamePlaying = false;
 		SendMessage(txtGame, WM_SETTEXT, 0, (LPARAM) "Not in Game!");
 		SendMessage(lstGameUserlist, LVM_DELETEALLITEMS, 0, 0);
 		SendMessage(txtGameChatroom, WM_SETTEXT, 0, (LPARAM) NULL);
@@ -5746,13 +5647,12 @@ bool supraCleanup(char type, HWND h){
 	}
 	//UnSubclass
 	else if(type == 2){
-		SetWindowLong(txtChat, GWL_WNDPROC, 0);
-		SetWindowLong(txtGameChat, GWL_WNDPROC, 0);
+		SetWindowLongPtr(txtChat, GWLP_WNDPROC, 0);
+		SetWindowLongPtr(txtGameChat, GWLP_WNDPROC, 0);
 	}
 	//Destroy
 	else if(type == 3){
 		if(h == form1){
-			//saveConfig();
 			userQuitRequest();
 			SendMessage(lstRecentList, LVM_DELETEALLITEMS, 0, 0);
 			SendMessage(lstFavoriteList, LVM_DELETEALLITEMS, 0, 0);
@@ -5760,13 +5660,8 @@ bool supraCleanup(char type, HWND h){
 			SendMessage(lstServerList3D, LVM_DELETEALLITEMS, 0, 0);
 			SendMessage(lstWaitingList, LVM_DELETEALLITEMS, 0, 0);
 			WSACleanup();
-			pingingK = false;
-			pinging3D = false;
-			exitThreads();
-			TerminateThread(pingKailleraServers, 0);
-			TerminateThread(ping3DServers, 0);
-			//CloseHandle(kailleraPingThread);
-			//CloseHandle(ping3DThread);
+			exitPingKThread();
+			exitPing3DThread();
 			closesocket(mySocket);
 			closesocket(mySocket3D);
 			closesocket(mySocketK);
@@ -5946,7 +5841,6 @@ void userlistAdditemAll(){
 int CALLBACK lstRecentlistCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
     TCHAR tsz1[1024];
     TCHAR tsz2[1024];
-//    int n1, n2;// For use in sorting by number.
 
     // Get the text of the two items.  Notice we get the text
     // for the column that we selected, specified by lstUserlistColumn.
@@ -6024,7 +5918,6 @@ void recentlistAdditem(char *server, char *ip, char *location){
 int CALLBACK lstWaitinglistCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
     TCHAR tsz1[1024];
     TCHAR tsz2[1024];
-//    int n1, n2;// For use in sorting by number.
 
     // Get the text of the two items.  Notice we get the text
     // for the column that we selected, specified by lstUserlistColumn.
@@ -6079,7 +5972,6 @@ void waitinglistAdditem(char *game, char *emulator, char *username, char *server
 int CALLBACK lstFavoritelistCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
     TCHAR tsz1[1024];
     TCHAR tsz2[1024];
-//    int n1, n2;// For use in sorting by number.
 
     // Get the text of the two items.  Notice we get the text
     // for the column that we selected, specified by lstUserlistColumn.
@@ -6189,7 +6081,6 @@ void gamelistAdditemAll(){
 
 
 void gamelistAdditem(char *game, char *version, char *owner, char *status, char *numUsers, char *gameID){
-//	int w;
 	LVITEM LvItem1;
 	memset(&LvItem1,0,sizeof(LvItem1)); // Zero struct's Members
 	//  Setting properties Of members:
@@ -6548,7 +6439,6 @@ void userQuitNotification(unsigned short position, int slot){
 	char quit[1024];
 	short strSize;
 	short i;
-//	int j;
 
 	
 	i = position;
@@ -6599,9 +6489,9 @@ void userQuitNotification(unsigned short position, int slot){
 
 //0x01 - User Quit Request
 void userQuitRequest(){
-	char dataToBeSent[1024];
-
 	if (loggedIn == true) {
+		char dataToBeSent[1024];
+
 		dataToBeSent[0] = 0x00;
 		dataToBeSent[1] = 0xFF;
 		dataToBeSent[2] = 0xFF;
@@ -6614,7 +6504,6 @@ void userQuitRequest(){
 		imAway = false;
 		loggedIn = false;
 	}
-
 	//cleanup
 	supraCleanup(0, 0);
 }
@@ -6629,7 +6518,6 @@ void userJoined(unsigned short position, int slot){
 	unsigned long ping;
 	char strPing[1024];
 	unsigned char connectionType;
-//	char str[2048];
 	char strConnectionType[1024];
 	short strSize;
 	short i;
@@ -6655,7 +6543,6 @@ void userJoined(unsigned short position, int slot){
 		myUserID = userID;
 		myPing = ping;
 		displayChatroomAsServer("Connected!");
-		loggedIn = true;
 		SetWindowText(form1, myServer);
 		userlistAdditemAll();
 		gamelistAdditemAll();
@@ -6745,7 +6632,8 @@ void serverStatus(unsigned short position, int slot){
     char emulator[1024];
     char maxUsers[1024];
 
-       
+	loggedIn = true;
+
     ///Get Number of Users
 	i = position + 1;
     numOfUsers = *(unsigned long *) &myBuff[slot].myBuff[i];
@@ -6940,7 +6828,6 @@ void globalChatNotification(unsigned short position, int slot){
 	char message[1024];
 	short strSize;
 	unsigned short i;
-//	int j;
 	
   
 	i = position;
@@ -7008,8 +6895,6 @@ void showOptions(char show){
 		ShowWindow(chkEmulinkerSF, SW_HIDE);
 		ShowWindow(chkEmuRes, SW_HIDE);
 		ShowWindow(chkConnRes, SW_HIDE);
-		//ShowWindow(txtREmulator, SW_HIDE);
-		//ShowWindow(lblREmulator, SW_HIDE);
 		ShowWindow(btnVersion, SW_HIDE);
 
 		/*ShowWindow(lblP2PServer, SW_HIDE);
@@ -7057,8 +6942,6 @@ void showOptions(char show){
 		ShowWindow(chkEmulinkerSF, SW_HIDE);
 		ShowWindow(chkEmuRes, SW_HIDE);
 		ShowWindow(chkConnRes, SW_HIDE);
-		//ShowWindow(txtREmulator, SW_HIDE);
-		//ShowWindow(lblREmulator, SW_HIDE);
 		ShowWindow(btnVersion, SW_HIDE);
 
 		/*ShowWindow(lblP2PServer, SW_HIDE);
@@ -7106,8 +6989,6 @@ void showOptions(char show){
 		ShowWindow(chkEmulinkerSF, SW_HIDE);
 		ShowWindow(chkEmuRes, SW_HIDE);
 		ShowWindow(chkConnRes, SW_HIDE);
-		//ShowWindow(txtREmulator, SW_HIDE);
-		//ShowWindow(lblREmulator, SW_HIDE);
 		ShowWindow(btnVersion, SW_HIDE);
 
 		/*ShowWindow(lblP2PServer, SW_HIDE);
@@ -7155,8 +7036,6 @@ void showOptions(char show){
 		ShowWindow(chkEmulinkerSF, SW_SHOW);
 		ShowWindow(chkEmuRes, SW_SHOW);
 		ShowWindow(chkConnRes, SW_SHOW);
-		//ShowWindow(txtREmulator, SW_SHOW);
-		//ShowWindow(lblREmulator, SW_SHOW);
 		ShowWindow(btnVersion, SW_SHOW);
 
 		/*ShowWindow(lblP2PServer, SW_HIDE);
@@ -7198,8 +7077,8 @@ void showOptions(char show){
 		ShowWindow(lblMaxPing, SW_HIDE);
 		ShowWindow(chkFakeP2P, SW_HIDE);
 		ShowWindow(chkEmulinkerSF, SW_HIDE);
-		ShowWindow(txtREmulator, SW_HIDE);
-		ShowWindow(lblREmulator, SW_HIDE);
+		ShowWindow(chkEmuRes, SW_HIDE);
+		ShowWindow(chkConnRes, SW_HIDE);
 		ShowWindow(btnVersion, SW_HIDE);
 
 		ShowWindow(lblP2PServer, SW_SHOW);
@@ -7290,8 +7169,6 @@ void gameChatNotification(unsigned short position, int slot){
 	char temp[2048];
 	short strSize;
 	short i;
-//	int j;
-//	int q;
 	
 	i = position;
 	//Nick
@@ -7378,8 +7255,6 @@ void createGameNotification(unsigned short position, int slot){
 	unsigned long gameID;
 	short strSize;
 	short i;
-//	int w;
-//	int j;
 	    
 	
 	i = position;
@@ -7499,7 +7374,6 @@ void quitGameNotification(unsigned short position, int slot){
 		displayAndAutoScrollRichEdit(txtGameChatroom, temp, RGB(122, 122, 122));
 
 	if(userID == myUserID){
-		//sizeOfEinput = -1;
 		if(iQuit == false)
 			displayAndAutoScrollRichEdit(txtChatroom, "<ALERT> YOU HAVE BEEN KICKED FROM THE GAME!\n", RGB(255, 0, 0));
 		iQuit = false;
@@ -7661,20 +7535,7 @@ void joinGameNotification(unsigned short position, int slot){
 			data[0] = '\0';
 			constructPacket(data, i, 0x08);	
 
-
-
 			//Restrict Emulator
-			/*GetWindowText(txtREmulator, rEmulatorValue, GetWindowTextLength(txtREmulator) + 1);
-			if(strlen(rEmulatorValue) == 0){
-				strcpy(rEmulatorValue, "any");
-				SetWindowText(txtREmulator, "any");
-			}
-			data[0] = 'd';
-			strcpy(&data[1], "/setemu ");
-			strcat(data, rEmulatorValue);
-			dLen = strlen(data) + 1;
-			data[0] = '\0';
-			constructPacket(data, dLen, 0x08);*/
 			data[0] = 'd';
 			if (emuResValue == BST_CHECKED) {
 				strcpy(&data[1], "/setemu ");
@@ -7836,14 +7697,11 @@ void playerInformation(unsigned short position, int slot){
     char nick[1024];
     unsigned long ping;
 	char strPing[1024];
-//	char status;
 	char strStatus[1024];
     unsigned short userID;
 	char strUserID[1024];
     unsigned char connectionType;
 	char strConnectionType[1024];
-
-//	char temp[2048];
        
     ///Get Number of Users
 	i = position + 1;
@@ -7994,8 +7852,6 @@ void closeGameNotification(unsigned short position, int slot){
 	char owner[1024];
 	char strGameID[1024];
 	char temp[2048];
-//	short strSize;
-//	int i;
 
 	//GameID
     gameID = *(unsigned long*) &myBuff[slot].myBuff[position + 1];
@@ -8063,9 +7919,10 @@ void startGameNotification(unsigned short position, int slot){
     sizeOfEinput = 0;
 
     startedGame = true;
-//	count = 0;
+
 	saveConfig();
-//kInfo.gameCallback(currentGame, myPlayerNumber, totalPlayers);
+
+	//kInfo.gameCallback(currentGame, myPlayerNumber, totalPlayers);
     gameThread = CreateThread(NULL, 0, callGameCallback, NULL, 0, NULL);
 }
 
@@ -8125,7 +7982,6 @@ void gameDataRecv(unsigned short position, int slot){
 //0x12 - Game Data Send
 void gameDataSend(){
 	int i;
-//	int w;
 	char dataToBeSent[2];
 
 	if(useCache == true){
@@ -8164,7 +8020,7 @@ void gameDataSend(){
 
 //0x13 - Game Cache Receive
 void gameCacheRecv(unsigned short position, int slot){
-    int i;//, w;
+    int i;
 
     for(i = 0; i < totalInput; i++){
         eInput[ePos] = inCache[(*((unsigned char *) &myBuff[slot].myBuff[position + 1]) * inCacheSize) + i];
@@ -8206,8 +8062,6 @@ void dropGameNotification(unsigned short position, int slot){
 	//Player Number
 	playerNumber = *(unsigned char *) &myBuff[slot].myBuff[i];
 	
-	//Clean Up
-	//CloseHandle(gameThread);
 	if(kInfo.clientDroppedCallback != NULL)
 		kInfo.clientDroppedCallback(nick, playerNumber);
 
@@ -8227,11 +8081,13 @@ void dropGameNotification(unsigned short position, int slot){
 
 //0x14 - Drop Game Request
 void dropGameRequest(){
-	char dataToBeSent[2];
+	if (startedGame) {
+		char dataToBeSent[2];
 
-	dataToBeSent[0] = '\0';
-	dataToBeSent[1] = 0x00;
-	constructPacket(dataToBeSent, 2, 0x14);
+		dataToBeSent[0] = '\0';
+		dataToBeSent[1] = 0x00;
+		constructPacket(dataToBeSent, 2, 0x14);
+	}
 }
 
 
@@ -8405,14 +8261,16 @@ int CALLBACK lstServerlistKCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
 		}
     }
     else if( lstServerlistKColumn == 2 || lstServerlistKColumn == 4 || lstServerlistKColumn == 5){
-		if(strstr(tsz1, ">1s") || strstr(tsz1, "ERR") || strstr(tsz1, "NA"))
-			n1 = 1000;
-		else
-			n1 = _tcstol(tsz1, 0, 10);
-		if(strstr(tsz2, ">1s") || strstr(tsz2, "ERR") || strstr(tsz2, "NA"))
-			n2 = 1000;
-		else
-			n2 = _tcstol(tsz2, 0, 10);
+		if (strstr(tsz1, ">1s")) n1 = 1000;
+		else if (strstr(tsz1, "ERR")) n1 = 1001;
+		else if (strstr(tsz1, "NA")) n1 = 1002;
+		else n1 = _tcstol(tsz1, 0, 10);
+
+		if (strstr(tsz2, ">1s")) n2 = 1000;
+		else if (strstr(tsz2, "ERR")) n2 = 1001;
+		else if (strstr(tsz2, "NA")) n2 = 1002;
+		else n2 = _tcstol(tsz2, 0, 10);
+
 		if(kailleraSwitch == false)
 			return (n1 - n2);
 		else
@@ -8432,7 +8290,7 @@ int CALLBACK lstServerlist3DCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
     ListView_GetItemText(lstServerList3D, i1, lstServerlist3DColumn, tsz1, 1024);
     ListView_GetItemText(lstServerList3D, i2, lstServerlist3DColumn, tsz2, 1024);
 
-    if(lstServerlist3DColumn == 0 || lstServerlist3DColumn == 3 || lstServerlist3DColumn == 4){
+	if (lstServerlist3DColumn == 0 || lstServerlist3DColumn == 1 || lstServerlist3DColumn == 3 || lstServerlist3DColumn == 6) {
 		if(anti3DSwitch == false){
 			return _tcscmp(strToLower(tsz1), strToLower(tsz2));
 		}
@@ -8440,9 +8298,16 @@ int CALLBACK lstServerlist3DCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
 			return _tcscmp(strToLower(tsz2), strToLower(tsz1));
 		}
     }
-    else if(lstServerlist3DColumn == 1 || lstServerlist3DColumn == 2 || lstServerlist3DColumn == 5 || lstServerlist3DColumn == 6){
-		n1 = _tcstol(tsz1, 0, 10);
-		n2 = _tcstol(tsz2, 0, 10);
+	else if (lstServerlist3DColumn == 2 || lstServerlist3DColumn == 4 || lstServerlist3DColumn == 5) {
+		if (strstr(tsz1, ">1s")) n1 = 1000;
+		else if (strstr(tsz1, "ERR")) n1 = 1001;
+		else if (strstr(tsz1, "NA")) n1 = 1002;
+		else n1 = _tcstol(tsz1, 0, 10);
+
+		if (strstr(tsz2, ">1s")) n2 = 1000;
+		else if (strstr(tsz2, "ERR")) n2 = 1001;
+		else if (strstr(tsz2, "NA")) n2 = 1002;
+		else n2 = _tcstol(tsz2, 0, 10);
 
 		if(anti3DSwitch == false)
 			return (n1 - n2);
@@ -8485,18 +8350,13 @@ int CALLBACK lstGamelistCompareFunc(LPARAM i1, LPARAM i2, LPARAM){
 
 
 
-void getServerList3D(){
-//	int bytesRecv;
-//	char addressServerList[1024];	
+void getServerList3D(){	
 	hostent* remoteHost;
-//	char ip[1024];
 	unsigned long addr;
 	int x;
-//	int temp;
 
 	closesocket(mySocket3D);
-	TerminateThread(ping3DServers, 0);
-	//CloseHandle(ping3DThread);
+	exitPing3DThread();
 	SendMessage(lstServerList3D, LVM_DELETEALLITEMS, 0, 0);
 
 	mySocket3D = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -8526,13 +8386,9 @@ void getServerList3D(){
 }
 
 void getWaitingGames(){
-//	int bytesRecv;
-//	char addressServerList[1024];	
 	hostent* remoteHost;
-//	char ip[1024];
 	unsigned long addr;
 	int x;
-//	int temp;
 
 	closesocket(mySocketWaiting);
 	SendMessage(lstWaitingList, LVM_DELETEALLITEMS, 0, 0);
@@ -8563,17 +8419,12 @@ void getWaitingGames(){
 }
 
 void getServerListK(){
-//	int bytesRecv;
-//	char addressServerList[1024];	
 	hostent* remoteHost;
-//	char ip[1024];
 	unsigned long addr;
 	int x;
-//	int temp;
 
 	closesocket(mySocketK);
-	TerminateThread(pingKailleraServers, 0);
-	//CloseHandle(kailleraPingThread);
+	exitPingKThread();
 	SendMessage(lstServerListK, LVM_DELETEALLITEMS, 0, 0);
 
 	mySocketK = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
