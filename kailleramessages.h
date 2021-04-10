@@ -203,8 +203,8 @@ int beepValue;
 bool userlistSwitch = false;
 bool gamelistSwitch = true;
 bool gameUserlistSwitch = false;
-bool kailleraSwitch = false;
-bool anti3DSwitch = false;
+bool kailleraSwitch = true;
+bool anti3DSwitch = true;
 bool recentSwitch = false;
 bool favoriteSwitch = false;
 bool waitingSwitch = false;
@@ -350,8 +350,8 @@ HMENU txtChatroomPmSubMenu;
 GETTEXTEX txtChatroomA;
 GETTEXTEX txtGameChatroomA;
 int lstUserlistColumn = 1;
-int lstServerlistKColumn = 0;
-int lstServerlist3DColumn = 0;
+int lstServerlistKColumn = 4;
+int lstServerlist3DColumn = 4;
 int lstGamelistColumn = 4;
 int lstRecentlistColumn = 4;
 int lstFavoritelistColumn = 4;
@@ -379,6 +379,7 @@ sockaddr_in socketInfoWaiting;
 struct SERVER_LIST{
 	char host[128];
 	char link[128];
+	char wglink[128];
 	unsigned long port;
 };
 
@@ -500,10 +501,10 @@ char emulator[128];
 char serverIP[1024] = "127.0.0.1:27888\0";
 unsigned long myPing;
 //################
-char myVersion[16] = "SCCPPE v0.89.7\0";
-char cVersion[25] = "SupraclientCPPE v0.89.7\0";
-char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.7  Wednesday December 11, 2019\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
-char quit[1024] = "I'm using SupraclientCPPE v0.89.7\0";
+char myVersion[16] = "SCCPPE v0.89.9\0";
+char cVersion[25] = "SupraclientCPPE v0.89.9\0";
+char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.9  Saturday March 27, 2021\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
+char quit[1024] = "I'm using SupraclientCPPE v0.89.9\0";
 //################
 bool chatroom;
 

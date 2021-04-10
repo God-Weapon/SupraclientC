@@ -352,9 +352,10 @@ extern "C" {
 
 		ZeroMemory(myBuff, MESSAGE_LENGTH * MESSAGE_SIZE);
 		//Server Lists
-		//strcpy(anti3DServerList.host, "master.anti3d.com");
-		//strcpy(anti3DServerList.link, "raw_server_list2.php");
-		//anti3DServerList.port = 80;
+		strcpy(anti3DServerList.host, "170.39.225.176");
+		strcpy(anti3DServerList.link, "server_list.php");
+		strcpy(anti3DServerList.wglink, "game_list.php");
+		anti3DServerList.port = 80;
 
 		strcpy(kailleraServerList.host, "www.kaillera.com");
 		strcpy(kailleraServerList.link, "raw_server_list2.php?wg=1&version=0.9");
@@ -792,15 +793,15 @@ extern "C" {
 		
 
 		//Create Child Window
-		form1 = CreateWindow("Supraclient", "SupraclientCPPE https://github.com/God-Weapon", formProperties, xPos, yPos, 800, 600, NULL, NULL, hInstance, NULL);
+		form1 = CreateWindow("Supraclient", "SupraclientCPPE https://god-weapon.github.io", formProperties, xPos, yPos, 800, 600, NULL, NULL, hInstance, NULL);
 		
 		kailleraInit();
 		createChatroom();
 		createInitialWindow();
 
-		Serverlist3DAdditem("Right Click to get Anti3D Server List.", NULL, NULL, NULL, NULL, NULL, NULL);
+		Serverlist3DAdditem("Right Click to get EmuLinker Server List.", NULL, NULL, NULL, NULL, NULL, NULL);
 		kServerlistAdditem("Right Click to get Kaillera Server List.", NULL, NULL, NULL, NULL, NULL, NULL);
-		waitinglistAdditem("Right Click to get Waiting Games.", NULL, NULL, NULL, NULL, NULL, NULL);
+		waitinglistAdditem("Right Click to get EmuLinker Waiting Games.", NULL, NULL, NULL, NULL, NULL, NULL);
 
 		//Adjust Parent Window
 		EnableWindow(parent, FALSE);
@@ -2217,10 +2218,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
 					waiting = true;
 					//Http GET Request
 					strcpy(dataToBeSent, "GET /");
-					strcat(dataToBeSent, kailleraServerList.link);
+					strcat(dataToBeSent, anti3DServerList.wglink);
 					strcat(dataToBeSent, " HTTP/1.0\r\n");
 					strcat(dataToBeSent, "Host: ");
-					strcat(dataToBeSent, kailleraServerList.host);
+					strcat(dataToBeSent, anti3DServerList.host);
 					strcat(dataToBeSent,"\r\n\r\n");
 					send(mySocketWaiting, dataToBeSent, strlen(dataToBeSent) + 1, NULL);
 					return 0;
@@ -2426,13 +2427,13 @@ void createInitialWindow(){
 	v.iImage = -1;
 	v.pszText = "Kaillera Server List";
 	TabCtrl_InsertItem(sTab, 0, &v);
-	v.pszText = "Anti3D Server List";
+	v.pszText = "EmuLinker Server List";
 	TabCtrl_InsertItem(sTab, 1, &v);
 	v.pszText = "Recent List";
 	TabCtrl_InsertItem(sTab, 2, &v);
 	v.pszText = "Favorites List";
 	TabCtrl_InsertItem(sTab, 3, &v);
-	v.pszText = "Waiting Games List";
+	v.pszText = "EmuLinker Waiting Games List";
 	TabCtrl_InsertItem(sTab, 4, &v);
 
 
@@ -3157,7 +3158,7 @@ void parseServerList3D(){
 	}
 
 	numOfServers = SendMessage(lstServerList3D, LVM_GETITEMCOUNT, 0, 0);
-	wsprintf(strServers, "%i Anti3D Servers Total", numOfServers);
+	wsprintf(strServers, "%i EmuLinker Servers Total", numOfServers);
 	SetWindowText(form1, strServers);
 
 }
@@ -3262,7 +3263,8 @@ void parseServerListK(){
 		}
 		location[w] = '\0';
 		
-
+		//skips spam servers
+		if (strstr(serverName, "www.kofip.com")) continue;
 		kServerlistAdditem(serverName, ipAddress, "NA", location, users, games, version);
 	}
 
@@ -3348,7 +3350,7 @@ DWORD WINAPI pingKailleraServers(LPVOID lpParam){
 		
 		if(sError == false){
 			if(inet_addr(strIP) == INADDR_NONE){
-				hp = gethostbyname(strAddress);
+				hp = gethostbyname(strIP);
 				if(hp == NULL){
 					closesocket(mySocketK);
 					b.iItem = i;
@@ -3356,7 +3358,7 @@ DWORD WINAPI pingKailleraServers(LPVOID lpParam){
 					b.pszText = "ERR";
 					SendMessage(lstServerListK, LVM_SETITEMTEXT, (WPARAM)i, (LPARAM)&b);
 					sError = true;
-				}
+				} else socketInfoK.sin_addr = *(struct in_addr*)(hp->h_addr_list[0]);
 			}
 			else{
 				socketInfoK.sin_addr.s_addr = inet_addr(strIP);
@@ -3401,7 +3403,8 @@ DWORD WINAPI pingKailleraServers(LPVOID lpParam){
 	kailleraSwitch = false;
 	lstServerlistKColumn = 2;
 	ListView_SortItemsEx(lstServerListK, lstServerlistKCompareFunc, 0);
-	lstServerlistKColumn = 0;
+	lstServerlistKColumn = 4;
+	kailleraSwitch = true;
 
 	SetWindowText(form1, "Kaillera Pinging Finished!");
 	exitPingKThread();
@@ -3434,11 +3437,11 @@ DWORD WINAPI ping3DServers(LPVOID lpParam){
 		bool sError = false;
 		
 		if(lastTabServer == 1 && pingingK == true){
-			sprintf(str, "Pinging Anti3D Server %i of %i", i + 1, total);
+			sprintf(str, "Pinging EmuLinker Server %i of %i", i + 1, total);
 			SetWindowText(form1, str);
 		}
 		else if(pingingK == false){
-			sprintf(str, "Pinging Anti3D Server %i of %i", i + 1, total);
+			sprintf(str, "Pinging EmuLInker Server %i of %i", i + 1, total);
 			SetWindowText(form1, str);
 		}
 
@@ -3486,7 +3489,7 @@ DWORD WINAPI ping3DServers(LPVOID lpParam){
 		
 		if(sError == false){		
 			if(inet_addr(strIP) == INADDR_NONE){
-				hp = gethostbyname(strAddress);
+				hp = gethostbyname(strIP);
 				if(hp == NULL){
 					closesocket(mySocket3D);
 					b.iItem = i;
@@ -3494,7 +3497,7 @@ DWORD WINAPI ping3DServers(LPVOID lpParam){
 					b.pszText = "ERR";
 					SendMessage(lstServerList3D, LVM_SETITEMTEXT, (WPARAM)i, (LPARAM)&b);
 					sError = true;
-				}
+				} else socketInfoK.sin_addr = *(struct in_addr*)(hp->h_addr_list[0]);
 			}
 			else{
 				socketInfo3D.sin_addr.s_addr = inet_addr(strIP);
@@ -3539,9 +3542,10 @@ DWORD WINAPI ping3DServers(LPVOID lpParam){
 	anti3DSwitch = false;
 	lstServerlist3DColumn = 2;
 	ListView_SortItemsEx(lstServerList3D, lstServerlist3DCompareFunc, 0);
-	lstServerlist3DColumn = 0;
+	lstServerlist3DColumn = 4;
+	anti3DSwitch = true;
 
-	SetWindowText(form1, "Anti3D Pinging Finished!");
+	SetWindowText(form1, "EmuLinker Pinging Finished!");
 	exitPing3DThread();
 	closesocket(mySocket3D);
 	return 0;
@@ -4205,7 +4209,7 @@ void popupMenu(char num){
 			else {
 				if (pinging3D == false) {
 					exitPing3DThread();
-					SetWindowText(form1, "Pinging Anti3D Servers...");
+					SetWindowText(form1, "Pinging EmuLinker Servers...");
 					ping3DThread = CreateThread(NULL, 0, ping3DServers, NULL, 0, NULL);
 				}
 			}
@@ -4218,7 +4222,7 @@ void popupMenu(char num){
 			}
 			else{
 				exitPing3DThread();
-				SetWindowText(form1, "Anti3D Pinging Stopped!");
+				SetWindowText(form1, "EmuLinker Pinging Stopped!");
 			}
 		}	
 		//For Connect
@@ -5631,7 +5635,7 @@ bool supraCleanup(char type, HWND h){
 		SendMessage(lstUserlist, LVM_DELETEALLITEMS, 0, 0);
 		SendMessage(lstGameUserlist, LVM_DELETEALLITEMS, 0, 0);
 		//Display
-		//SendMessage(form1, WM_SETTEXT, 0, (LPARAM) "SupraclientCPPE https://github.com/God-Weapon");
+		//SendMessage(form1, WM_SETTEXT, 0, (LPARAM) "SupraclientCPPE https://god-weapon.github.io");
 		strcpy(myServer, "Not in a Server\0");
 		displayChatroomAsServer("Disconnected!");
 		displayStats();
@@ -6142,7 +6146,7 @@ void showRecentlist(){
 		char str[1024];
 		num = SendMessage(lstRecentList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 1){
-			SetWindowText(form1, "SupraclientCPPE https://github.com/God-Weapon");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Recent Servers", num);
@@ -6184,7 +6188,7 @@ void showWaitinglist(){
 		char str[1024];
 		num = SendMessage(lstWaitingList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://github.com/God-Weapon");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Waiting Games", num);
@@ -6226,7 +6230,7 @@ void showFavoritelist(){
 		char str[1024];
 		num = SendMessage(lstFavoriteList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 1){
-			SetWindowText(form1, "SupraclientCPPE https://github.com/God-Weapon");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Favorite Servers", num);
@@ -6267,7 +6271,7 @@ void showServerlistK(){
 		char str[1024];
 		num = SendMessage(lstServerListK, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://github.com/God-Weapon");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Kaillera Servers", num);
@@ -6308,10 +6312,10 @@ void showServerlist3D(){
 		char str[1024];
 		num = SendMessage(lstServerList3D, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://github.com/God-Weapon");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
-			wsprintf(str, "%i Anti3D Servers", num);
+			wsprintf(str, "%i EmuLinker Servers", num);
 			SetWindowText(form1, str);
 		}
 }
@@ -8363,21 +8367,18 @@ void getServerList3D(){
 	socketInfo3D.sin_family = AF_INET;
     socketInfo3D.sin_port = htons((u_short)anti3DServerList.port);
 
-	if(inet_addr(anti3DServerList.host) == INADDR_NONE){
+	if (inet_addr(anti3DServerList.host) == INADDR_NONE) {
 		remoteHost = gethostbyname(anti3DServerList.host);
+		if (remoteHost == NULL) {
+			closesocket(mySocket3D);
+			MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
+			return;
+		}
+		else socketInfo3D.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 	}
-	else{
-		addr = inet_addr(anti3DServerList.host);
-		remoteHost = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+	else {
+		socketInfo3D.sin_addr.s_addr = inet_addr(anti3DServerList.host);
 	}
-
-	if(remoteHost == NULL){
-		closesocket(mySocket3D);
-		MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
-		return;
-	}
-
-    socketInfo3D.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 
 	WSAAsyncSelect(mySocket3D, form1, SC_SUPRARECV3D, FD_WRITE | FD_CONNECT | FD_READ | FD_CLOSE);
     x = connect(mySocket3D, (sockaddr *) &socketInfo3D, sizeof(socketInfo3D));
@@ -8395,23 +8396,20 @@ void getWaitingGames(){
 
 	mySocketWaiting = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	socketInfoWaiting.sin_family = AF_INET;
-    socketInfoWaiting.sin_port = htons((u_short)kailleraServerList.port);
+    socketInfoWaiting.sin_port = htons((u_short)anti3DServerList.port);
 
-	if(inet_addr(kailleraServerList.host) == INADDR_NONE){
-		remoteHost = gethostbyname(kailleraServerList.host);
+	if (inet_addr(anti3DServerList.host) == INADDR_NONE) {
+		remoteHost = gethostbyname(anti3DServerList.host);
+		if (remoteHost == NULL) {
+			closesocket(mySocketWaiting);
+			MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
+			return;
+		}
+		else socketInfoWaiting.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 	}
-	else{
-		addr = inet_addr(kailleraServerList.host);
-		remoteHost = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+	else {
+		socketInfoWaiting.sin_addr.s_addr = inet_addr(anti3DServerList.host);
 	}
-
-	if(remoteHost == NULL){
-		closesocket(mySocketK);
-		MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
-		return;
-	}
-
-    socketInfoWaiting.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 
 	WSAAsyncSelect(mySocketWaiting, form1, SC_SUPRARECVWAITING, FD_WRITE | FD_CONNECT | FD_READ | FD_CLOSE);
     x = connect(mySocketWaiting, (sockaddr *) &socketInfoWaiting, sizeof(socketInfoWaiting));
@@ -8431,21 +8429,18 @@ void getServerListK(){
 	socketInfoK.sin_family = AF_INET;
     socketInfoK.sin_port = htons((u_short)kailleraServerList.port);
 
-	if(inet_addr(kailleraServerList.host) == INADDR_NONE){
+	if (inet_addr(kailleraServerList.host) == INADDR_NONE) {
 		remoteHost = gethostbyname(kailleraServerList.host);
+		if (remoteHost == NULL) {
+			closesocket(mySocketWaiting);
+			MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
+			return;
+		}
+		else socketInfoK.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 	}
-	else{
-		addr = inet_addr(kailleraServerList.host);
-		remoteHost = gethostbyaddr((char*)&addr, sizeof(addr), AF_INET);
+	else {
+		socketInfoK.sin_addr.s_addr = inet_addr(kailleraServerList.host);
 	}
-
-	if(remoteHost == NULL){
-		closesocket(mySocketK);
-		MessageBox(form1, "Could not resolve Server List!  Server may be down", "Error Resolving Address!", NULL);
-		return;
-	}
-
-    socketInfoK.sin_addr.s_addr = *((unsigned long*)remoteHost->h_addr);
 
 	WSAAsyncSelect(mySocketK, form1, SC_SUPRARECVK, FD_WRITE | FD_CONNECT | FD_READ | FD_CLOSE);
     x = connect(mySocketK, (sockaddr *) &socketInfoK, sizeof(socketInfoK));
