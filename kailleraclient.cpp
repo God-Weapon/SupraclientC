@@ -352,7 +352,7 @@ extern "C" {
 
 		ZeroMemory(myBuff, MESSAGE_LENGTH * MESSAGE_SIZE);
 		//Server Lists
-		strcpy(anti3DServerList.host, "master.emulinker.org");
+		strcpy(anti3DServerList.host, "kaillerareborn.2manygames.fr");
 		strcpy(anti3DServerList.link, "server_list.php");
 		strcpy(anti3DServerList.wglink, "game_list.php");
 		anti3DServerList.port = 80;
@@ -793,7 +793,7 @@ extern "C" {
 		
 
 		//Create Child Window
-		form1 = CreateWindow("Supraclient", "SupraclientCPPE https://www.EmuLinker.org", formProperties, xPos, yPos, 800, 600, NULL, NULL, hInstance, NULL);
+		form1 = CreateWindow("Supraclient", "SupraclientCPPE https://god-weapon.github.io", formProperties, xPos, yPos, 800, 600, NULL, NULL, hInstance, NULL);
 		
 		kailleraInit();
 		createChatroom();
@@ -3264,7 +3264,12 @@ void parseServerListK(){
 		location[w] = '\0';
 		
 		//skips spam servers
-		if (strstr(serverName, "kofip") || strcmp(version, "0.99") == 0 || strcmp(version, "1.01") == 0) continue;
+		if (strstr(serverName, "kofip") || 
+			strcmp(version, "0.97") == 0 || 
+			strcmp(version, "0.98") == 0 || 
+			strcmp(version, "0.99") == 0 || 
+			strcmp(version, "1.00") == 0 || 
+			strcmp(version, "1.01") == 0) continue;
 		kServerlistAdditem(serverName, ipAddress, "NA", location, users, games, version);
 	}
 
@@ -5635,7 +5640,7 @@ bool supraCleanup(char type, HWND h){
 		SendMessage(lstUserlist, LVM_DELETEALLITEMS, 0, 0);
 		SendMessage(lstGameUserlist, LVM_DELETEALLITEMS, 0, 0);
 		//Display
-		//SendMessage(form1, WM_SETTEXT, 0, (LPARAM) "SupraclientCPPE https://www.EmuLinker.org");
+		//SendMessage(form1, WM_SETTEXT, 0, (LPARAM) "SupraclientCPPE https://god-weapon.github.io");
 		strcpy(myServer, "Not in a Server\0");
 		displayChatroomAsServer("Disconnected!");
 		displayStats();
@@ -6146,7 +6151,7 @@ void showRecentlist(){
 		char str[1024];
 		num = SendMessage(lstRecentList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 1){
-			SetWindowText(form1, "SupraclientCPPE https://www.EmuLinker.org");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Recent Servers", num);
@@ -6188,7 +6193,7 @@ void showWaitinglist(){
 		char str[1024];
 		num = SendMessage(lstWaitingList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://www.EmuLinker.org");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Waiting Games", num);
@@ -6230,7 +6235,7 @@ void showFavoritelist(){
 		char str[1024];
 		num = SendMessage(lstFavoriteList, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 1){
-			SetWindowText(form1, "SupraclientCPPE https://www.EmuLinker.org");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Favorite Servers", num);
@@ -6271,7 +6276,7 @@ void showServerlistK(){
 		char str[1024];
 		num = SendMessage(lstServerListK, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://www.EmuLinker.org");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i Kaillera Servers", num);
@@ -6312,7 +6317,7 @@ void showServerlist3D(){
 		char str[1024];
 		num = SendMessage(lstServerList3D, LVM_GETITEMCOUNT, 0, 0);
 		if(num < 2){
-			SetWindowText(form1, "SupraclientCPPE https://www.EmuLinker.org");
+			SetWindowText(form1, "SupraclientCPPE https://god-weapon.github.io");
 		}
 		else{
 			wsprintf(str, "%i EmuLinker Servers", num);

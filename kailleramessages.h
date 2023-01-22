@@ -501,10 +501,10 @@ char emulator[128];
 char serverIP[1024] = "127.0.0.1:27888\0";
 unsigned long myPing;
 //################
-char myVersion[16] = "SCCPPE v0.91.3\0";
-char cVersion[25] = "SupraclientCPPE v0.91.3\0";
-char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.91.3  Thursday May 6, 2021\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
-char quit[1024] = "I'm using SupraclientCPPE v0.91.3\0";
+char myVersion[17] = "SCCPPE v0.89.10\0";
+char cVersion[26] = "SupraclientCPPE v0.89.10\0";
+char initText[1024] = "Supraclient CPPE [C++ Edition]\r\nVersion: 0.89.10  Sunday Jan 22, 2023\r\nSpecial Thanks to: Trac, Moosehead, & r@z\r\nOther Testers: Morphus56K, Paramount, Agenda Suicide, & okaygo\r\nAuthor: SupraFast - Daniel Strusser\r\nEmail: Dynomite1234@aol.com\r\n\r\n#To get started, click on the button below that says [Servers]\n\0";
+char quit[1024] = "I'm using SupraclientCPPE v0.89.10\0";
 //################
 bool chatroom;
 
